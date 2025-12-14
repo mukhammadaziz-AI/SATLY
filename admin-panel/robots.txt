@@ -1,0 +1,60 @@
+# Block AI Crawlers and Web Scrapers
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: img2dataset
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+# Block all bots from sensitive user data endpoints
+User-agent: *
+Disallow: /dashboard/
+Disallow: /exam/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /django-admin/
+Disallow: /media/avatars/
+Disallow: /payment/
+
+# Allow search engines to index public pages
+Allow: /
+Allow: /login/
+Allow: /signup/

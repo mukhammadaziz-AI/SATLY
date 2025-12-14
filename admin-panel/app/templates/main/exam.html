@@ -1,0 +1,904 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAT Exam - SATLY</title>
+    
+    <!-- Security & Privacy Meta Tags -->
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --light: #f8fafc;
+            --gradient: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+        }
+        .exam-header {
+            background: white;
+            padding: 1rem 2rem;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 1.5rem;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .section-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .section-icon {
+            width: 45px;
+            height: 45px;
+            background: #dbeafe;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.25rem;
+        }
+        .section-icon.math { background: #d1fae5; color: var(--secondary); }
+        .section-title h2 { font-size: 1.1rem; font-weight: 700; }
+        .section-title span { font-size: 0.85rem; color: var(--gray); }
+        .progress-bar {
+            flex: 1;
+            max-width: 600px;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0 2rem;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient);
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+        .timer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--light);
+            border-radius: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        .timer i { color: var(--primary); }
+        .timer.warning { background: #fef3c7; color: #92400e; }
+        .timer.warning i { color: #92400e; }
+        .timer.danger { background: #fee2e2; color: #dc2626; }
+        .timer.danger i { color: #dc2626; }
+
+        .btn-back {
+            padding: 0.75rem 1.25rem;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            color: var(--gray);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .btn-back:hover {
+            border-color: #dc2626;
+            color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .calculator-widget {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            width: 280px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            z-index: 999;
+            user-select: none;
+        }
+
+        .calc-handle {
+            background: linear-gradient(135deg, #2563eb, #10b981);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 20px 20px 0 0;
+            cursor: move;
+            text-align: center;
+            font-size: 1.25rem;
+        }
+
+        .calc-handle:active {
+            cursor: grabbing;
+        }
+
+        .calc-display {
+            padding: 1.5rem;
+            background: #f8fafc;
+        }
+
+        .calc-display input {
+            width: 100%;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: right;
+            color: var(--dark);
+        }
+
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            padding: 1rem;
+        }
+
+        .calc-buttons button {
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: #f1f5f9;
+            color: var(--dark);
+            transition: all 0.2s;
+        }
+
+        .calc-buttons button:hover {
+            background: #e2e8f0;
+            transform: scale(1.05);
+        }
+
+        .calc-buttons button:active {
+            transform: scale(0.95);
+        }
+
+        .calc-buttons button.operator {
+            background: #dbeafe;
+            color: var(--primary);
+        }
+
+        .calc-buttons button.equal {
+            background: linear-gradient(135deg, #2563eb, #10b981);
+            color: white;
+        }
+
+        .calc-buttons button.span-2 {
+            grid-column: span 2;
+        }
+
+        .exam-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .question-card {
+            background: white;
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+        .question-badge {
+            display: inline-block;
+            background: #dbeafe;
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option:hover { border-color: var(--primary); background: #f0f9ff; }
+        .option.selected {
+            border-color: var(--primary);
+            background: #dbeafe;
+        }
+        .option.selected .option-radio {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        .option.selected .option-radio i { display: block; }
+        .option-radio {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #cbd5e1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            transition: all 0.3s;
+        }
+        .option-radio i { display: none; }
+        .option-text { flex: 1; font-size: 1rem; }
+        .navigation-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .question-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .q-num {
+            width: 100%;
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            background: #f1f5f9;
+            color: var(--gray);
+            transition: all 0.3s;
+        }
+        .q-num:hover { background: #e2e8f0; }
+        .q-num.current { background: var(--primary); color: white; }
+        .q-num.answered { background: var(--secondary); color: white; }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        .btn-outline {
+            background: white;
+            border: 2px solid #e2e8f0;
+            color: var(--gray);
+        }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-outline:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+        .btn-primary:hover { transform: translateY(-2px); }
+        .answer-count {
+            font-size: 0.95rem;
+            color: var(--gray);
+        }
+        .break-screen, .section-complete {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 200;
+        }
+        .break-screen.active, .section-complete.active { display: flex; }
+        .break-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #92400e;
+            margin-bottom: 2rem;
+        }
+        .break-screen h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+        .break-screen p { color: var(--gray); font-size: 1.1rem; margin-bottom: 2rem; }
+        .break-timer {
+            font-size: 4rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 24px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalSlide 0.3s ease;
+        }
+        .modal-content h2 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+        .modal-content p {
+            color: var(--gray);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        .modal-buttons .btn {
+            flex: 1;
+        }
+        @keyframes modalSlide {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .progress-bar { display: none; }
+            .question-grid { grid-template-columns: repeat(9, 1fr); }
+            .exam-container { padding: 0 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="exam-header">
+        <button class="btn-back" onclick="showBackModal()">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <div class="section-info">
+            <div class="section-icon" id="sectionIcon"><i class="fas fa-book-open"></i></div>
+            <div class="section-title">
+                <h2 id="sectionTitle">English Module 1</h2>
+                <span id="questionCounter">Question 1 of 27</span>
+            </div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar" style="width: 3.7%"></div>
+        </div>
+        <div class="timer" id="timer">
+            <i class="fas fa-clock"></i>
+            <span id="timerDisplay">32:00</span>
+        </div>
+    </header>
+
+    <!-- Draggable Calculator for Math Module 2 -->
+    <div id="calculatorWidget" class="calculator-widget" style="display: none;">
+        <div class="calc-handle" id="calcHandle">
+            <i class="fas fa-arrows-alt"></i>
+        </div>
+        <div class="calc-display">
+            <input type="text" id="calcScreen" value="0" readonly>
+        </div>
+        <div class="calc-buttons">
+            <button onclick="calcClear()">AC</button>
+            <button onclick="calcDelete()">DEL</button>
+            <button onclick="calcAppend('%')">%</button>
+            <button onclick="calcAppend('/')" class="operator">÷</button>
+            <button onclick="calcAppend('7')">7</button>
+            <button onclick="calcAppend('8')">8</button>
+            <button onclick="calcAppend('9')">9</button>
+            <button onclick="calcAppend('*')" class="operator">×</button>
+            <button onclick="calcAppend('4')">4</button>
+            <button onclick="calcAppend('5')">5</button>
+            <button onclick="calcAppend('6')">6</button>
+            <button onclick="calcAppend('-')" class="operator">−</button>
+            <button onclick="calcAppend('1')">1</button>
+            <button onclick="calcAppend('2')">2</button>
+            <button onclick="calcAppend('3')">3</button>
+            <button onclick="calcAppend('+')" class="operator">+</button>
+            <button onclick="calcAppend('0')" class="span-2">0</button>
+            <button onclick="calcAppend('.')">.</button>
+            <button onclick="calcEqual()" class="operator equal">=</button>
+        </div>
+    </div>
+
+    <div class="exam-container">
+        <div class="question-card">
+            <div class="question-badge" id="questionBadge">Question 1</div>
+            <div class="question-text" id="questionText">Loading question...</div>
+            <div class="options" id="optionsContainer"></div>
+        </div>
+
+        <div class="navigation-panel">
+            <div class="question-grid" id="questionGrid"></div>
+            <div class="nav-buttons">
+                <button class="btn btn-outline" id="prevBtn" disabled><i class="fas fa-chevron-left"></i> Previous</button>
+                <span class="answer-count"><span id="answeredCount">0</span> of <span id="totalQuestions">27</span> answered</span>
+                <button class="btn btn-primary" id="nextBtn">Next <i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="break-screen" id="breakScreen">
+        <div class="break-icon"><i class="fas fa-coffee"></i></div>
+        <h1>Take a Break!</h1>
+        <p>You've completed the English section. Take a 10-minute break before starting Math.</p>
+        <div class="break-timer" id="breakTimer">10:00</div>
+        <button class="btn btn-primary" id="skipBreakBtn"><i class="fas fa-forward"></i> Skip Break & Start Math</button>
+    </div>
+
+    <!-- Finish Section Confirmation Modal -->
+    <div class="modal" id="finishModal">
+        <div class="modal-content">
+            <h2>Finish Section?</h2>
+            <p>You have <span id="unansweredCount">0</span> unanswered questions. Are you sure you want to finish this section?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-outline" onclick="closeModal()">Review Answers</button>
+                <button class="btn btn-primary" onclick="confirmFinish()">Finish Section</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back Confirmation Modal -->
+    <div class="modal" id="backModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div style="width: 80px; height: 80px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 2.5rem; color: #dc2626;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--dark); margin-bottom: 0.75rem;">Imtihondan chiqmoqchimisiz?</h2>
+                <p style="color: var(--gray); font-size: 0.95rem; line-height: 1.6;">
+                    Chiqib ketsangiz barcha natijalar bekor qilinadi.<br>
+                    <strong>Imtihonni yana topshirish uchun to'lov talab qilinadi.</strong>
+                </p>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button onclick="closeBackModal()" style="flex: 1; padding: 1rem 1.5rem; background: #f1f5f9; border: none; border-radius: 12px; font-weight: 600; color: var(--gray); cursor: pointer; transition: all 0.3s;">
+                    Testda qolish
+                </button>
+                <button onclick="confirmBack()" style="flex: 1; padding: 1rem 1.5rem; background: #dc2626; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);">
+                    Ha, chiqaman
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offline/Pause Modal -->
+    <div class="modal" id="offlineModal" style="display: none;">
+        <div class="modal-content" style="max-width: 450px;">
+            <div style="text-align: center;">
+                <div style="width: 100px; height: 100px; background: #fef3c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 3rem;">
+                    <i class="fas fa-wifi-slash" style="color: #f59e0b;"></i>
+                </div>
+                <h2 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 0.75rem;">Internet Uzildi</h2>
+                <p style="color: var(--gray); font-size: 1rem; margin-bottom: 0.5rem;">Imtihon vaqti to'xtatildi.</p>
+                <p style="color: var(--gray); font-size: 0.9rem; line-height: 1.6;">Internetga ulanganingizda imtihon qolgan joyidan davom etadi.</p>
+                <div style="margin-top: 2rem; padding: 1rem; background: var(--light); border-radius: 12px;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--gray);">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Ulanish kutilmoqda...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const examData = {
+            sessionId: {{ exam_session.id }},
+            currentSection: '{{ exam_session.current_section }}',
+            currentModule: {{ exam_session.current_module }},
+            questions: {{ questions|safe }},
+            answers: {{ answers|safe }},
+            timeRemaining: {{ time_remaining }},
+            csrfToken: '{{ csrf_token }}'
+        };
+
+        let currentQuestion = 0;
+        let timerInterval;
+        let timeLeft = examData.timeRemaining;
+
+        const sectionConfig = {
+            english: { module1: { questions: 27, time: 32 * 60 }, module2: { questions: 27, time: 32 * 60 } },
+            math: { module1: { questions: 22, time: 35 * 60 }, module2: { questions: 22, time: 35 * 60 } }
+        };
+
+        // Draggable Calculator
+        let isDragging = false;
+        let currentX, currentY, initialX, initialY;
+        const calculator = document.getElementById('calculatorWidget');
+        const handle = document.getElementById('calcHandle');
+
+        handle.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+
+        handle.addEventListener('touchstart', dragStart);
+        document.addEventListener('touchmove', drag);
+        document.addEventListener('touchend', dragEnd);
+
+        function dragStart(e) {
+            if (e.type === 'touchstart') {
+                initialX = e.touches[0].clientX - calculator.offsetLeft;
+                initialY = e.touches[0].clientY - calculator.offsetTop;
+            } else {
+                initialX = e.clientX - calculator.offsetLeft;
+                initialY = e.clientY - calculator.offsetTop;
+            }
+            isDragging = true;
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+
+            if (e.type === 'touchmove') {
+                currentX = e.touches[0].clientX - initialX;
+                currentY = e.touches[0].clientY - initialY;
+            } else {
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+            }
+
+            calculator.style.left = currentX + 'px';
+            calculator.style.top = currentY + 'px';
+            calculator.style.right = 'auto';
+        }
+
+        function dragEnd() {
+            isDragging = false;
+        }
+
+        // Calculator Functions
+        let calcValue = '0';
+        let calcOperator = '';
+        let waitingForOperand = false;
+
+        function calcAppend(val) {
+            const screen = document.getElementById('calcScreen');
+            if (calcValue === '0' || waitingForOperand) {
+                calcValue = val;
+                waitingForOperand = false;
+            } else {
+                calcValue += val;
+            }
+            screen.value = calcValue;
+        }
+
+        function calcClear() {
+            calcValue = '0';
+            calcOperator = '';
+            waitingForOperand = false;
+            document.getElementById('calcScreen').value = calcValue;
+        }
+
+        function calcDelete() {
+            calcValue = calcValue.slice(0, -1) || '0';
+            document.getElementById('calcScreen').value = calcValue;
+        }
+
+        function calcEqual() {
+            try {
+                calcValue = eval(calcValue).toString();
+                document.getElementById('calcScreen').value = calcValue;
+                waitingForOperand = true;
+            } catch (e) {
+                calcValue = 'Error';
+                document.getElementById('calcScreen').value = calcValue;
+            }
+        }
+
+        // Show calculator only for Math Module 2
+        function checkAndShowCalculator() {
+            if (examData.currentSection === 'math' && examData.currentModule === 2) {
+                document.getElementById('calculatorWidget').style.display = 'block';
+            } else {
+                document.getElementById('calculatorWidget').style.display = 'none';
+            }
+        }
+
+        // Back Button Modal
+        function showBackModal() {
+            document.getElementById('backModal').classList.add('active');
+        }
+
+        function closeBackModal() {
+            document.getElementById('backModal').classList.remove('active');
+        }
+
+        function confirmBack() {
+            window.location.href = "{% url 'user_dashboard' %}";
+        }
+
+        // Internet Connectivity Monitor
+        let wasOnline = navigator.onLine;
+        let pausedTime = null;
+
+        function handleOnline() {
+            document.getElementById('offlineModal').style.display = 'none';
+            if (pausedTime !== null) {
+                timeLeft = pausedTime;
+                pausedTime = null;
+                startTimer();
+            }
+        }
+
+        function handleOffline() {
+            pausedTime = timeLeft;
+            clearInterval(timerInterval);
+            document.getElementById('offlineModal').style.display = 'flex';
+        }
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        // Check connectivity on load
+        if (!navigator.onLine) {
+            handleOffline();
+        }
+
+        // Initial check for calculator
+        checkAndShowCalculator();
+
+        function init() {
+            renderQuestionGrid();
+            loadQuestion(currentQuestion);
+            startTimer();
+            updateProgress();
+        }
+
+        function renderQuestionGrid() {
+            const grid = document.getElementById('questionGrid');
+            grid.innerHTML = '';
+            examData.questions.forEach((_, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'q-num' + (i === currentQuestion ? ' current' : '') + (examData.answers[i] ? ' answered' : '');
+                btn.textContent = i + 1;
+                btn.onclick = () => goToQuestion(i);
+                grid.appendChild(btn);
+            });
+            document.getElementById('totalQuestions').textContent = examData.questions.length;
+        }
+
+        function loadQuestion(index) {
+            const q = examData.questions[index];
+            document.getElementById('questionBadge').textContent = `Question ${index + 1}`;
+            document.getElementById('questionText').textContent = q.question_text;
+            document.getElementById('questionCounter').textContent = `Question ${index + 1} of ${examData.questions.length}`;
+            
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            ['A', 'B', 'C', 'D'].forEach(opt => {
+                const div = document.createElement('div');
+                div.className = 'option' + (examData.answers[index] === opt ? ' selected' : '');
+                div.innerHTML = `
+                    <div class="option-radio"><i class="fas fa-check"></i></div>
+                    <div class="option-text">${q['option_' + opt.toLowerCase()]}</div>
+                `;
+                div.onclick = () => selectOption(opt, div);
+                container.appendChild(div);
+            });
+
+            document.getElementById('prevBtn').disabled = index === 0;
+            const nextBtn = document.getElementById('nextBtn');
+            if (index === examData.questions.length - 1) {
+                nextBtn.innerHTML = 'Finish Section <i class="fas fa-flag-checkered"></i>';
+            } else {
+                nextBtn.innerHTML = 'Next <i class="fas fa-chevron-right"></i>';
+            }
+
+            updateQuestionGrid();
+            updateProgress();
+        }
+
+        function selectOption(opt, element) {
+            document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+            element.classList.add('selected');
+            examData.answers[currentQuestion] = opt;
+            saveAnswer(examData.questions[currentQuestion].id, opt);
+            updateQuestionGrid();
+            updateAnsweredCount();
+        }
+
+        function saveAnswer(questionId, answer) {
+            fetch('/api/exam/save-answer/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': examData.csrfToken },
+                body: JSON.stringify({ session_id: examData.sessionId, question_id: questionId, answer: answer })
+            });
+        }
+
+        function goToQuestion(index) {
+            currentQuestion = index;
+            loadQuestion(index);
+        }
+
+        function updateQuestionGrid() {
+            document.querySelectorAll('.q-num').forEach((btn, i) => {
+                btn.className = 'q-num' + (i === currentQuestion ? ' current' : '') + (examData.answers[i] ? ' answered' : '');
+            });
+        }
+
+        function updateAnsweredCount() {
+            const count = examData.answers.filter(a => a).length;
+            document.getElementById('answeredCount').textContent = count;
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / examData.questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function startTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    finishSection();
+                }
+                if (timeLeft % 30 === 0) saveTimeRemaining();
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            document.getElementById('timerDisplay').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            const timer = document.getElementById('timer');
+            timer.className = 'timer' + (timeLeft <= 60 ? ' danger' : timeLeft <= 300 ? ' warning' : '');
+        }
+
+        function saveTimeRemaining() {
+            fetch('/api/exam/save-time/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': examData.csrfToken },
+                body: JSON.stringify({ session_id: examData.sessionId, time_remaining: timeLeft })
+            });
+        }
+
+        document.getElementById('prevBtn').onclick = () => {
+            if (currentQuestion > 0) goToQuestion(currentQuestion - 1);
+        };
+
+        document.getElementById('nextBtn').onclick = () => {
+            if (currentQuestion < examData.questions.length - 1) {
+                goToQuestion(currentQuestion + 1);
+            } else {
+                showFinishModal();
+            }
+        };
+
+        function showFinishModal() {
+            const unanswered = examData.answers.filter(a => !a).length;
+            document.getElementById('unansweredCount').textContent = unanswered;
+            document.getElementById('finishModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('finishModal').classList.remove('active');
+        }
+
+        function confirmFinish() {
+            closeModal();
+            clearInterval(timerInterval);
+            finishSection();
+        }
+
+        function finishSection() {
+            fetch('/api/exam/finish-section/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': examData.csrfToken },
+                body: JSON.stringify({ session_id: examData.sessionId })
+            }).then(r => r.json()).then(data => {
+                if (data.next_action === 'break') {
+                    closeModal();
+                    showBreak();
+                } else if (data.next_action === 'next_module') {
+                    window.location.reload();
+                } else if (data.next_action === 'results') {
+                    window.location.href = '/exam/result/' + examData.sessionId + '/';
+                }
+            });
+        }
+
+        function showBreak() {
+            document.getElementById('breakScreen').classList.add('active');
+            let breakTime = 600;
+            const breakInterval = setInterval(() => {
+                breakTime--;
+                const mins = Math.floor(breakTime / 60);
+                const secs = breakTime % 60;
+                document.getElementById('breakTimer').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                if (breakTime <= 0) {
+                    clearInterval(breakInterval);
+                    startMath();
+                }
+            }, 1000);
+            document.getElementById('skipBreakBtn').onclick = () => {
+                clearInterval(breakInterval);
+                startMath();
+            };
+        }
+
+        function startMath() {
+            fetch('/api/exam/start-math/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': examData.csrfToken },
+                body: JSON.stringify({ session_id: examData.sessionId })
+            }).then(() => window.location.reload());
+        }
+
+        init();
+    </script>
+</body>
+</html>

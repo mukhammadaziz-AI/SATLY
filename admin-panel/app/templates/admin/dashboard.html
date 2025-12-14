@@ -1,0 +1,611 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Dashboard - SATLY Admin{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400..800&family=Karla:wght@300;400;500;600;700&display=swap');
+
+    .dashboard-wrapper {
+        font-family: 'Karla', sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        min-height: 100vh;
+        margin: -32px;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dashboard-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+        animation: float 20s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    .dashboard-wrapper::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+        animation: float 25s ease-in-out infinite reverse;
+        pointer-events: none;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(30px, -30px) scale(1.1); }
+    }
+
+    .dashboard-header {
+        position: relative;
+        z-index: 2;
+        margin-bottom: 3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: slideDown 0.8s ease-out;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dashboard-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #ec4899 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -2px;
+        margin-bottom: 0.5rem;
+    }
+
+    .dashboard-subtitle {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.95rem;
+        color: #94a3b8;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .date-badge {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 1rem 1.5rem;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 16px;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.9rem;
+        color: #cbd5e1;
+    }
+
+    .date-badge i {
+        color: #60a5fa;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .metric-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 24px;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: fadeIn 0.8s ease-out backwards;
+    }
+
+    .metric-card:nth-child(1) { animation-delay: 0.1s; }
+    .metric-card:nth-child(2) { animation-delay: 0.2s; }
+    .metric-card:nth-child(3) { animation-delay: 0.3s; }
+    .metric-card:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--card-gradient);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+    }
+
+    .metric-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .metric-card:hover {
+        transform: translateY(-8px);
+        border-color: rgba(148, 163, 184, 0.4);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .metric-card.blue { --card-gradient: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .metric-card.emerald { --card-gradient: linear-gradient(90deg, #10b981, #34d399); }
+    .metric-card.purple { --card-gradient: linear-gradient(90deg, #8b5cf6, #a855f7); }
+    .metric-card.amber { --card-gradient: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+    .metric-icon-wrapper {
+        width: 70px;
+        height: 70px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.4s ease;
+    }
+
+    .metric-card:hover .metric-icon-wrapper {
+        transform: rotate(5deg) scale(1.1);
+    }
+
+    .metric-card.blue .metric-icon-wrapper {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(96, 165, 250, 0.1));
+        color: #60a5fa;
+    }
+
+    .metric-card.emerald .metric-icon-wrapper {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(52, 211, 153, 0.1));
+        color: #34d399;
+    }
+
+    .metric-card.purple .metric-icon-wrapper {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(168, 85, 247, 0.1));
+        color: #a855f7;
+    }
+
+    .metric-card.amber .metric-icon-wrapper {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.1));
+        color: #fbbf24;
+    }
+
+    .metric-label {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.8rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 0.75rem;
+    }
+
+    .metric-value {
+        font-family: 'Syne', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #f1f5f9;
+        letter-spacing: -1px;
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .chart-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 28px;
+        padding: 2.5rem;
+        animation: fadeIn 0.8s ease-out 0.5s backwards;
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .chart-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f1f5f9;
+    }
+
+    .period-select {
+        padding: 0.75rem 2rem 0.75rem 1rem;
+        background: rgba(30, 41, 59, 0.6);
+        border: 2px solid rgba(148, 163, 184, 0.2);
+        border-radius: 12px;
+        font-family: 'Karla', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #f1f5f9;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .period-select:focus {
+        outline: none;
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+    }
+
+    .table-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 28px;
+        padding: 2.5rem;
+        position: relative;
+        z-index: 2;
+        animation: fadeIn 0.8s ease-out 0.6s backwards;
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .table-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #f1f5f9;
+    }
+
+    .view-all-btn {
+        padding: 0.875rem 1.75rem;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        border: none;
+        border-radius: 12px;
+        font-family: 'Syne', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #fff;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .view-all-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(59, 130, 246, 0.4);
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .data-table thead th {
+        padding: 1rem 1.25rem;
+        text-align: left;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        border-bottom: 2px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .data-table tbody td {
+        padding: 1.25rem;
+        color: #cbd5e1;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        font-size: 0.95rem;
+    }
+
+    .data-table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .data-table tbody tr:hover {
+        background: rgba(96, 165, 250, 0.05);
+    }
+
+    .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .rank-badge.rank-1 {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        color: #1e293b;
+        box-shadow: 0 4px 20px rgba(251, 191, 36, 0.4);
+    }
+
+    .rank-badge.rank-2 {
+        background: linear-gradient(135deg, #94a3b8, #64748b);
+        color: #1e293b;
+        box-shadow: 0 4px 20px rgba(148, 163, 184, 0.4);
+    }
+
+    .rank-badge.rank-3 {
+        background: linear-gradient(135deg, #cd7f32, #a0522d);
+        color: white;
+        box-shadow: 0 4px 20px rgba(205, 127, 50, 0.4);
+    }
+
+    .rank-badge:not(.rank-1):not(.rank-2):not(.rank-3) {
+        background: rgba(100, 116, 139, 0.2);
+        color: #94a3b8;
+    }
+
+    .band-score {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #60a5fa;
+    }
+</style>
+
+<div class="dashboard-wrapper">
+    <div class="dashboard-header">
+        <div>
+            <h1 class="dashboard-title">Dashboard</h1>
+            <p class="dashboard-subtitle">Welcome Back, Admin</p>
+        </div>
+        <div class="date-badge">
+            <i class="fas fa-calendar-alt"></i>
+            <span id="current-date"></span>
+        </div>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="metric-card blue">
+            <div class="metric-icon-wrapper">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="metric-label">Total Users</div>
+            <div class="metric-value" id="total-users">-</div>
+        </div>
+
+        <div class="metric-card emerald">
+            <div class="metric-icon-wrapper">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div class="metric-label">New Signups (7d)</div>
+            <div class="metric-value" id="new-signups">-</div>
+        </div>
+
+        <div class="metric-card purple">
+            <div class="metric-icon-wrapper">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="metric-label">Daily Active Users</div>
+            <div class="metric-value" id="dau">-</div>
+        </div>
+
+        <div class="metric-card amber">
+            <div class="metric-icon-wrapper">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div class="metric-label">Total Tests</div>
+            <div class="metric-value" id="total-tests">-</div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Daily Active Users</h3>
+                <select id="dau-period" class="period-select">
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="all">All time</option>
+                </select>
+            </div>
+            <canvas id="dauChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">Tests Completed</h3>
+                <select id="tests-period" class="period-select">
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="all">All time</option>
+                </select>
+            </div>
+            <canvas id="testsChart"></canvas>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-header">
+            <h3 class="table-title">Top Band Scores</h3>
+            <a href="{% url 'admin_users' %}" class="view-all-btn">View All Users</a>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Name</th>
+                    <th>Band Score</th>
+                    <th>Tests Completed</th>
+                </tr>
+            </thead>
+            <tbody id="top-scores-body">
+                <tr><td colspan="4" style="text-align: center; color: #64748b;">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    
+    loadDashboardStats();
+    loadDauChart(7);
+    loadTestsChart(7);
+    loadTopScores();
+    
+    document.getElementById('dau-period').addEventListener('change', function() {
+        loadDauChart(this.value);
+    });
+    document.getElementById('tests-period').addEventListener('change', function() {
+        loadTestsChart(this.value);
+    });
+});
+
+let dauChart, testsChart;
+
+async function loadDashboardStats() {
+    try {
+        const response = await fetch('/api/dashboard/stats/');
+        const data = await response.json();
+        document.getElementById('total-users').textContent = data.total_users.toLocaleString();
+        document.getElementById('new-signups').textContent = data.new_signups.toLocaleString();
+        document.getElementById('dau').textContent = data.dau.toLocaleString();
+        document.getElementById('total-tests').textContent = data.total_tests.toLocaleString();
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+async function loadDauChart(days) {
+    try {
+        const response = await fetch(`/api/dashboard/daily-active-users/?days=${days}`);
+        const result = await response.json();
+        
+        const labels = result.data.map(d => d.date);
+        const data = result.data.map(d => d.active_users);
+        
+        if (dauChart) dauChart.destroy();
+        
+        dauChart = new Chart(document.getElementById('dauChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Active Users',
+                    data: data,
+                    borderColor: '#6c5ce7',
+                    backgroundColor: 'rgba(108, 92, 231, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error loading DAU chart:', error);
+    }
+}
+
+async function loadTestsChart(days) {
+    try {
+        const response = await fetch(`/api/dashboard/tests-completed/?days=${days}`);
+        const result = await response.json();
+        
+        const labels = result.data.map(d => d.date);
+        const data = result.data.map(d => d.tests_completed);
+        
+        if (testsChart) testsChart.destroy();
+        
+        testsChart = new Chart(document.getElementById('testsChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Tests Completed',
+                    data: data,
+                    backgroundColor: '#00b894',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error loading tests chart:', error);
+    }
+}
+
+async function loadTopScores() {
+    try {
+        const response = await fetch('/api/dashboard/top-band-scores/?limit=10');
+        const result = await response.json();
+        
+        const tbody = document.getElementById('top-scores-body');
+        
+        if (result.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="no-data">No data available</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = result.data.map(user => `
+            <tr>
+                <td><span class="rank-badge rank-${user.rank}">#${user.rank}</span></td>
+                <td>${user.name}</td>
+                <td><span class="band-score">${user.band_score}</span></td>
+                <td>${user.tests_completed}</td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading top scores:', error);
+    }
+}
+</script>
+{% endblock %}
