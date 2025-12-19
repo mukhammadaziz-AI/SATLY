@@ -78,7 +78,7 @@ def register_page(request):
             english_level=english_level
         )
         
-        auth_login(request, user)
+        auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         messages.success(request, 'Account created successfully!')
         return redirect('user_dashboard')
     
