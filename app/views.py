@@ -877,6 +877,7 @@ def api_tests_list(request):
             'difficulty': test.difficulty,
             'duration': test.duration,
             'questions_count': test.questions_count,
+            'questions': test.test_questions,
             'is_active': test.is_active,
             'completions': completions,
             'avg_score': round(avg_score, 1) if avg_score else 0,
@@ -920,6 +921,7 @@ def api_test_detail(request, test_id):
             'difficulty': test.difficulty,
             'duration': test.duration,
             'questions_count': test.questions_count,
+            'questions': test.test_questions,
             'is_active': test.is_active,
         })
     
@@ -927,9 +929,11 @@ def api_test_detail(request, test_id):
         test = get_object_or_404(Test, id=test_id)
         data = json.loads(request.body)
         
-        for field in ['title', 'description', 'category', 'test_type', 'difficulty', 'duration', 'questions_count', 'is_active']:
+        for field in ['title', 'description', 'category', 'test_type', 'difficulty', 'duration', 'questions_count', 'is_active', 'test_questions']:
             if field in data:
                 setattr(test, field, data[field])
+            elif field == 'test_questions' and 'questions' in data:
+                test.test_questions = data['questions']
         
         test.save()
         return JsonResponse({'success': True})

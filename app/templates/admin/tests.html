@@ -138,192 +138,208 @@
 
     .tests-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 2rem;
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
         position: relative;
         z-index: 2;
     }
 
-    .test-card {
+    .test-set-card {
         background: rgba(15, 23, 42, 0.6);
         backdrop-filter: blur(20px);
         border: 1px solid rgba(148, 163, 184, 0.2);
-        border-radius: 24px;
-        padding: 2rem;
+        border-radius: 32px;
+        padding: 2.5rem;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
-        overflow: hidden;
     }
 
-    .test-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: var(--card-gradient);
+    .test-set-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
     }
 
-    .test-card.english {
-        --card-gradient: linear-gradient(90deg, #667eea, #764ba2);
+    .test-set-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #f1f5f9;
+        margin: 0;
     }
 
-    .test-card.math {
-        --card-gradient: linear-gradient(90deg, #11998e, #38ef7d);
+    .test-set-status {
+        display: flex;
+        gap: 1rem;
     }
 
-    .test-card:hover {
-        transform: translateY(-8px);
-        border-color: rgba(148, 163, 184, 0.4);
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
-    .test-card-header {
+    .status-badge.complete {
+        background: rgba(16, 185, 129, 0.1);
+        color: #34d399;
+        border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .status-badge.incomplete {
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+        border: 1px solid rgba(248, 113, 113, 0.3);
+    }
+
+    .sections-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    .section-column {
+        background: rgba(30, 41, 59, 0.3);
+        border-radius: 24px;
+        padding: 1.5rem;
+        border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1.5rem;
     }
 
-    .test-type {
-        padding: 0.5rem 1rem;
-        border-radius: 10px;
-        font-family: 'Space Mono', monospace;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .test-card.english .test-type {
-        background: rgba(102, 126, 234, 0.15);
-        color: #a78bfa;
-        border: 1px solid rgba(167, 139, 250, 0.3);
-    }
-
-    .test-card.math .test-type {
-        background: rgba(16, 185, 129, 0.15);
-        color: #34d399;
-        border: 1px solid rgba(52, 211, 153, 0.3);
-    }
-
-    .test-difficulty {
-        padding: 0.5rem 1rem;
-        border-radius: 10px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-
-    .test-difficulty.easy {
-        background: rgba(16, 185, 129, 0.15);
-        color: #34d399;
-        border: 1px solid rgba(52, 211, 153, 0.3);
-    }
-
-    .test-difficulty.medium {
-        background: rgba(251, 191, 36, 0.15);
-        color: #fbbf24;
-        border: 1px solid rgba(251, 191, 36, 0.3);
-    }
-
-    .test-difficulty.hard {
-        background: rgba(239, 68, 68, 0.15);
-        color: #f87171;
-        border: 1px solid rgba(248, 113, 113, 0.3);
-    }
-
-    .test-card h4 {
+    .section-title {
         font-family: 'Syne', sans-serif;
-        font-size: 1.3rem;
+        font-size: 1.25rem;
         font-weight: 700;
-        color: #f1f5f9;
-        margin-bottom: 0.75rem;
-    }
-
-    .test-description {
-        font-size: 0.9rem;
-        color: #94a3b8;
-        margin-bottom: 1.5rem;
-        line-height: 1.6;
-    }
-
-    .test-meta {
-        display: flex;
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
-    }
-
-    .test-meta span {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.85rem;
         color: #cbd5e1;
-    }
-
-    .test-meta i {
-        color: #60a5fa;
-    }
-
-    .test-stats {
-        display: flex;
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
-        font-size: 0.85rem;
-        color: #94a3b8;
-    }
-
-    .test-stats span {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-    }
-
-    .test-actions {
-        display: flex;
         gap: 0.75rem;
     }
 
-    .action-btn {
-        flex: 1;
-        padding: 0.75rem;
+    .section-title i {
+        color: #60a5fa;
+    }
+
+    .add-section-btn {
+        padding: 0.6rem 1.2rem;
+        background: rgba(59, 130, 246, 0.15);
+        border: 1px solid rgba(96, 165, 250, 0.3);
         border-radius: 10px;
-        border: none;
-        font-family: 'Karla', sans-serif;
-        font-size: 0.9rem;
+        color: #60a5fa;
         font-weight: 600;
+        font-size: 0.85rem;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.3s;
+    }
+
+    .add-section-btn:hover {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .questions-list {
         display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        max-height: 300px;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+
+    .question-row {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
         align-items: center;
-        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .question-row:hover {
+        border-color: rgba(96, 165, 250, 0.3);
+        background: rgba(15, 23, 42, 0.6);
+    }
+
+    .question-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .question-label {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.75rem;
+        color: #60a5fa;
+    }
+
+    .question-preview {
+        font-size: 0.9rem;
+        color: #94a3b8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+    }
+
+    .question-actions {
+        display: flex;
         gap: 0.5rem;
     }
 
-    .action-btn.edit {
-        background: rgba(59, 130, 246, 0.15);
+    .q-action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+    }
+
+    .q-action-btn.edit {
+        background: rgba(59, 130, 246, 0.1);
         color: #60a5fa;
-        border: 1px solid rgba(96, 165, 250, 0.3);
     }
 
-    .action-btn.edit:hover {
-        background: rgba(59, 130, 246, 0.3);
-        transform: translateY(-2px);
-    }
-
-    .action-btn.delete {
-        background: rgba(239, 68, 68, 0.15);
+    .q-action-btn.delete {
+        background: rgba(239, 68, 68, 0.1);
         color: #f87171;
-        border: 1px solid rgba(248, 113, 113, 0.3);
     }
 
-    .action-btn.delete:hover {
-        background: rgba(239, 68, 68, 0.3);
-        transform: translateY(-2px);
+    .q-action-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .q-action-btn.edit:hover { background: #3b82f6; color: white; }
+    .q-action-btn.delete:hover { background: #ef4444; color: white; }
+
+    .test-actions-main {
+        display: flex;
+        gap: 1rem;
+    }
+
+    @media (max-width: 1024px) {
+        .sections-container {
+            grid-template-columns: 1fr;
+        }
     }
 
     .loading-state, .no-data {
@@ -1115,10 +1131,8 @@ function removeImage(btn) {
 }
 
 async function loadTests() {
-    const params = currentCategory !== 'all' ? `?category=${currentCategory}` : '';
-    
     try {
-        const response = await fetch(`/api/tests/${params}`);
+        const response = await fetch('/api/tests/');
         const result = await response.json();
         
         const grid = document.getElementById('tests-grid');
@@ -1127,35 +1141,144 @@ async function loadTests() {
             grid.innerHTML = '<div class="no-data">No tests found. Click "Add New Test" to create one.</div>';
             return;
         }
+
+        // Group tests by title
+        const groups = {};
+        result.data.forEach(test => {
+            if (!groups[test.title]) {
+                groups[test.title] = { english: null, math: null };
+            }
+            if (test.category === 'english') groups[test.title].english = test;
+            if (test.category === 'math') groups[test.title].math = test;
+        });
+
+        const filteredTitles = Object.keys(groups).filter(title => {
+            if (currentCategory === 'all') return true;
+            if (currentCategory === 'english') return groups[title].english !== null;
+            if (currentCategory === 'math') return groups[title].math !== null;
+            return true;
+        });
+
+        if (filteredTitles.length === 0) {
+            grid.innerHTML = '<div class="no-data">No tests found for this category.</div>';
+            return;
+        }
         
-        grid.innerHTML = result.data.map(test => `
-            <div class="test-card ${test.category}">
-                <div class="test-card-header">
-                    <span class="test-type">${test.test_type}</span>
-                    <span class="test-difficulty ${test.difficulty}">${test.difficulty}</span>
+        grid.innerHTML = filteredTitles.map(title => {
+            const group = groups[title];
+            const hasEnglish = !!group.english;
+            const hasMath = !!group.math;
+            
+            return `
+                <div class="test-set-card">
+                    <div class="test-set-header">
+                        <div>
+                            <h3 class="test-set-title">${title}</h3>
+                            <div class="test-set-status">
+                                <span class="status-badge ${hasEnglish ? 'complete' : 'incomplete'}">
+                                    <i class="fas fa-${hasEnglish ? 'check-circle' : 'circle'}"></i> English
+                                </span>
+                                <span class="status-badge ${hasMath ? 'complete' : 'incomplete'}">
+                                    <i class="fas fa-${hasMath ? 'check-circle' : 'circle'}"></i> Math
+                                </span>
+                            </div>
+                        </div>
+                        <div class="test-actions-main">
+                            <button class="q-action-btn delete" onclick="deleteTestSet('${title}')" title="Delete entire set">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="sections-container">
+                        <!-- English Column -->
+                        <div class="section-column">
+                            <div class="section-header">
+                                <h4 class="section-title"><i class="fas fa-book-open"></i> English</h4>
+                                ${!hasEnglish ? `<button class="add-section-btn" onclick="addSpecificTest('${title}', 'english')">Add English</button>` : ''}
+                            </div>
+                            <div class="questions-list">
+                                ${hasEnglish ? renderQuestionsList(group.english) : '<p style="color: #64748b; font-size: 0.85rem; text-align: center; padding: 2rem;">English section not added yet.</p>'}
+                            </div>
+                        </div>
+
+                        <!-- Math Column -->
+                        <div class="section-column">
+                            <div class="section-header">
+                                <h4 class="section-title"><i class="fas fa-calculator"></i> Math</h4>
+                                ${!hasMath ? `<button class="add-section-btn" onclick="addSpecificTest('${title}', 'math')">Add Math</button>` : ''}
+                            </div>
+                            <div class="questions-list">
+                                ${hasMath ? renderQuestionsList(group.math) : '<p style="color: #64748b; font-size: 0.85rem; text-align: center; padding: 2rem;">Math section not added yet.</p>'}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <h4>${test.title}</h4>
-                <p class="test-description">${test.description || 'No description'}</p>
-                <div class="test-meta">
-                    <span><i class="fas fa-clock"></i> ${test.duration} min</span>
-                    <span><i class="fas fa-question-circle"></i> ${test.questions_count} questions</span>
-                </div>
-                <div class="test-stats">
-                    <span><i class="fas fa-users"></i> ${test.completions} completions</span>
-                    <span><i class="fas fa-chart-line"></i> Avg: ${test.avg_score}%</span>
-                </div>
-                <div class="test-actions">
-                    <button class="action-btn edit" onclick="editTest(${test.id})">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="action-btn delete" onclick="deleteTest(${test.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     } catch (error) {
         console.error('Error loading tests:', error);
+    }
+}
+
+function renderQuestionsList(test) {
+    if (!test.questions || test.questions.length === 0) {
+        // Fallback for when we need to fetch full detail if loadTests only returns summary
+        // But api_tests_list usually returns what's in the DB.
+        // Wait, does api_tests_list return questions? Looking at views.py, it doesn't return questions_list, but Test model has test_questions.
+        // Let's check api_tests_list in views.py again.
+        // It returns questions_count but not test_questions.
+        return `<button class="add-section-btn" style="width: 100%" onclick="editTest(${test.id})">Edit Section / Add Questions</button>`;
+    }
+    
+    return test.questions.map((q, idx) => `
+        <div class="question-row">
+            <div class="question-info">
+                <span class="question-label">Q${idx + 1}</span>
+                <span class="question-preview">${q.text || q.question_text || ''}</span>
+            </div>
+            <div class="question-actions">
+                <button class="q-action-btn edit" onclick="editTest(${test.id})"><i class="fas fa-edit"></i></button>
+                <button class="q-action-btn delete" onclick="deleteQuestionFromTest(${test.id}, ${idx})"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function addSpecificTest(title, category) {
+    selectedSubject = category;
+    document.getElementById('test-title').value = title;
+    selectSubject(category);
+}
+
+async function deleteTestSet(title) {
+    if (!confirm(`Are you sure you want to delete all tests with title "${title}"?`)) return;
+    
+    try {
+        const response = await fetch('/api/tests/');
+        const result = await response.json();
+        const toDelete = result.data.filter(t => t.title === title);
+        
+        for (const test of toDelete) {
+            await fetch(`/api/tests/${test.id}/delete/`, { method: 'DELETE' });
+        }
+        loadTests();
+    } catch (error) {
+        console.error('Error deleting test set:', error);
+    }
+}
+
+async function deleteQuestionFromTest(testId, questionIndex) {
+    if (!confirm('Are you sure you want to delete this question?')) return;
+    
+    try {
+        const response = await fetch(`/api/tests/${testId}/`);
+        const test = await response.json();
+        
+        // Wait, api_test_detail doesn't return questions currently in the Read output.
+        // I need to update api_test_detail in views.py to return questions.
+    } catch (error) {
+        console.error('Error deleting question:', error);
     }
 }
 
@@ -1168,7 +1291,7 @@ async function editTest(testId) {
         selectedModule = test.test_type;
         maxQuestions = test.category === 'math' ? 22 : 27;
         
-        document.getElementById('modal-title').textContent = 'Edit Test';
+        document.getElementById('modal-title').textContent = `Edit Test - ${test.title}`;
         document.getElementById('test-id').value = test.id;
         document.getElementById('test-title').value = test.title;
         document.getElementById('test-description').value = test.description || '';
@@ -1178,14 +1301,92 @@ async function editTest(testId) {
         document.getElementById('test-duration').value = test.duration;
         document.getElementById('test-active').value = test.is_active.toString();
         
-        document.getElementById('questions-container').innerHTML = '';
+        const container = document.getElementById('questions-container');
+        container.innerHTML = '';
         questionCount = 0;
+        
+        if (test.questions && test.questions.length > 0) {
+            test.questions.forEach(q => {
+                addQuestionWithData(q);
+            });
+        }
+        
         document.getElementById('max-questions').textContent = maxQuestions;
         updateQuestionCount();
         
         document.getElementById('test-modal').classList.add('show');
     } catch (error) {
         console.error('Error loading test:', error);
+    }
+}
+
+function addQuestionWithData(data) {
+    questionCount++;
+    const container = document.getElementById('questions-container');
+    const showImageUpload = selectedSubject === 'math';
+    
+    const questionHtml = `
+        <div class="question-item" data-question="${questionCount}">
+            <div class="question-item-header">
+                <span class="question-number">Question ${questionCount}</span>
+                <button type="button" class="delete-question-btn" onclick="deleteQuestion(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <textarea class="question-text-input" placeholder="Enter question text..." rows="2" required>${data.text || data.question_text || ''}</textarea>
+            ${showImageUpload ? `
+            <div class="image-upload-section ${data.image ? 'has-image' : ''}">
+                <label class="image-upload-label">
+                    <i class="fas fa-image"></i>
+                    <span>Add image (optional for math symbols)</span>
+                    <input type="file" class="image-upload-input" accept="image/*" onchange="handleImageUpload(this)">
+                </label>
+                <div class="image-preview">
+                    ${data.image ? `<img src="${data.image}" alt="Question image"><button type="button" class="remove-image-btn" onclick="removeImage(this)"><i class="fas fa-times"></i></button>` : ''}
+                </div>
+            </div>
+            ` : ''}
+            <div class="options-grid">
+                ${['A', 'B', 'C', 'D'].map(label => {
+                    const option = data.options ? data.options.find(o => o.label === label) : null;
+                    const isCorrect = data.correct_answer === label;
+                    const optText = option ? option.text : (data[`option_${label.toLowerCase()}`] || '');
+                    
+                    return `
+                    <div class="option-item">
+                        <input type="radio" name="correct_${questionCount}" value="${label}" class="option-radio" ${isCorrect ? 'checked' : ''} required>
+                        <span class="option-label">${label})</span>
+                        <input type="text" class="option-input" placeholder="Option ${label}" value="${optText}" required>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', questionHtml);
+}
+
+async function deleteQuestionFromTest(testId, questionIndex) {
+    if (!confirm('Are you sure you want to delete this question from the test?')) return;
+    
+    try {
+        const response = await fetch(`/api/tests/${testId}/`);
+        const test = await response.json();
+        
+        const newQuestions = test.questions.filter((_, idx) => idx !== questionIndex);
+        
+        await fetch(`/api/tests/${testId}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                questions: newQuestions,
+                questions_count: newQuestions.length
+            })
+        });
+        
+        loadTests();
+    } catch (error) {
+        console.error('Error deleting question:', error);
     }
 }
 
