@@ -261,3 +261,4 @@ class PricingSettings(models.Model):
     def get_settings(cls):
         settings, created = cls.objects.get_or_create(id=1)
         return settings
+    
