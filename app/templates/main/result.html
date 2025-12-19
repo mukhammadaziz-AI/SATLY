@@ -1,0 +1,655 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAT Score Report - SATLY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --sat-blue: #0077c8;
+            --sat-dark: #003366;
+            --sat-light: #e8f4fc;
+            --success: #10b981;
+            --text: #1a1a2e;
+            --gray: #64748b;
+            --light-gray: #f1f5f9;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f7fa;
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--sat-dark);
+            text-decoration: none;
+        }
+        .logo img {
+            height: 45px;
+            width: auto;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .btn-outline {
+            background: white;
+            border: 2px solid #e2e8f0;
+            color: var(--gray);
+        }
+        .btn-outline:hover { border-color: var(--sat-blue); color: var(--sat-blue); }
+        .btn-primary {
+            background: var(--sat-blue);
+            color: white;
+        }
+        .btn-primary:hover { background: #005fa3; }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .score-report {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 2rem 2.5rem;
+            border-bottom: 3px solid var(--sat-blue);
+        }
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .satly-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .satly-brand img {
+            height: 50px;
+            width: auto;
+        }
+        .sat-title {
+            margin-top: 0.5rem;
+        }
+        .sat-title h1 {
+            font-size: 3.5rem;
+            font-weight: 300;
+            color: var(--sat-blue);
+            font-style: italic;
+            letter-spacing: -1px;
+        }
+        .sat-title h1 sup {
+            font-size: 1rem;
+            top: -1.5rem;
+        }
+        .sat-title h2 {
+            font-size: 1.75rem;
+            font-weight: 400;
+            color: var(--sat-blue);
+            margin-top: -0.25rem;
+        }
+        .header-right {
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+        .header-right p {
+            margin-bottom: 0.35rem;
+        }
+        .header-right strong {
+            font-weight: 700;
+        }
+        .student-info {
+            padding: 1.5rem 2.5rem;
+            border-bottom: 1px solid #e5e5e5;
+            display: flex;
+            justify-content: space-between;
+        }
+        .student-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .report-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 0;
+        }
+        .scores-section {
+            padding: 2rem 2.5rem;
+            border-right: 1px solid #e5e5e5;
+        }
+        .section-title {
+            color: var(--sat-blue);
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--sat-blue);
+            padding-bottom: 0.5rem;
+        }
+        .total-score-box {
+            margin-bottom: 2rem;
+        }
+        .total-score-display {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+        }
+        .total-score-value {
+            font-size: 5rem;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1;
+        }
+        .score-range {
+            color: var(--gray);
+            font-size: 0.9rem;
+            border-left: 3px solid var(--sat-blue);
+            padding-left: 0.75rem;
+        }
+        .percentile-row {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        .percentile-item {
+            font-size: 0.85rem;
+        }
+        .percentile-item strong {
+            display: block;
+            font-size: 1.25rem;
+            color: var(--text);
+        }
+        .percentile-item span {
+            color: var(--gray);
+            font-size: 0.75rem;
+        }
+        .section-scores {
+            margin-top: 2rem;
+        }
+        .section-score-card {
+            margin-bottom: 1.5rem;
+        }
+        .section-score-header {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+        }
+        .section-score-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--sat-blue);
+        }
+        .section-score-range {
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+        .section-score-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-top: 0.25rem;
+        }
+        .benchmark-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+        }
+        .benchmark-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--success);
+        }
+        .benchmark-badge i {
+            color: white;
+            background: var(--success);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+        }
+        .info-section {
+            padding: 2rem 1.5rem;
+            background: #fafafa;
+        }
+        .info-box {
+            margin-bottom: 1.5rem;
+        }
+        .info-box h4 {
+            color: var(--sat-blue);
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .info-box p {
+            font-size: 0.75rem;
+            color: var(--gray);
+            line-height: 1.6;
+        }
+        .test-scores-section {
+            padding: 1.5rem 2.5rem;
+            border-top: 1px solid #e5e5e5;
+        }
+        .test-scores-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        .test-score-item h4 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--sat-blue);
+        }
+        .test-score-item h4 span {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: var(--gray);
+            margin-left: 0.25rem;
+        }
+        .test-score-item p {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        .report-footer {
+            padding: 1.5rem 2.5rem;
+            border-top: 1px solid #e5e5e5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        .certificate-id {
+            font-weight: 600;
+            color: var(--text);
+        }
+        .download-btn-float {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            background: var(--sat-blue);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,119,200,0.4);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        .download-btn-float:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0,119,200,0.5);
+        }
+        .analysis-section {
+            margin-top: 2rem;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            padding: 2rem;
+        }
+        .analysis-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .analysis-title i { color: var(--sat-blue); }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+        .chart-card {
+            background: var(--light-gray);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        .chart-card h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+        .chart-container {
+            height: 220px;
+            position: relative;
+        }
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .breakdown-item {
+            background: var(--light-gray);
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .breakdown-item span:first-child {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        .breakdown-item span:last-child {
+            font-weight: 700;
+            color: var(--text);
+        }
+        .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        @media (max-width: 768px) {
+            .report-content { grid-template-columns: 1fr; }
+            .scores-section { border-right: none; border-bottom: 1px solid #e5e5e5; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .test-scores-grid { grid-template-columns: 1fr; }
+            .report-header { flex-direction: column; gap: 1.5rem; }
+            .header-right { text-align: left; }
+            .total-score-value { font-size: 4rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">
+            <img src="{% static 'images/satly-logo.png' %}" alt="SATLY">
+        </a>
+        <div class="nav-buttons">
+            <a href="{% url 'user_dashboard' %}" class="btn btn-outline"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="{% url 'start_exam' %}" class="btn btn-primary"><i class="fas fa-redo"></i> Take Another Test</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="score-report" id="certificate">
+            <div class="report-header">
+                <div class="header-left">
+                    <div class="satly-brand">
+                        <img src="{% static 'images/satly-logo.png' %}" alt="SATLY">
+                    </div>
+                    <div class="sat-title">
+                        <h1>SAT<sup>&reg;</sup></h1>
+                        <h2>Score Report</h2>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <p>Test Date: <strong>{{ exam.completed_at|date:"M. d, Y" }}</strong></p>
+                    <p>Certificate Number: <strong>{{ exam.certificate_id|default:"SATLY-XXXXXXXX" }}</strong></p>
+                    <p>&nbsp;</p>
+                    <p>Duration: <strong>{{ exam_duration }}</strong></p>
+                    <p>Test Center: <strong>SATLY Online</strong></p>
+                </div>
+            </div>
+
+            <div class="student-info">
+                <div class="student-name">
+                    {% if user.get_full_name %}
+                        {{ user.get_full_name }}
+                    {% else %}
+                        {{ user.first_name|default:user.username }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="report-content">
+                <div class="scores-section">
+                    <h3 class="section-title">Your Total Score</h3>
+                    <div class="total-score-box">
+                        <div class="total-score-display">
+                            <div class="total-score-value">{{ exam.total_score }}</div>
+                            <div class="score-range">400 to<br>1600</div>
+                        </div>
+                        <div class="percentile-row">
+                            <div class="percentile-item">
+                                <strong>{{ english_percentile|default:"--" }}th</strong>
+                                <span>Nationally Representative<br>Sample Percentile</span>
+                            </div>
+                            <div class="percentile-item">
+                                <strong>{{ user_percentile|default:"--" }}th</strong>
+                                <span>SAT User Percentile —<br>National</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">Section Scores</h3>
+                    <div class="section-scores">
+                        <div class="section-score-card">
+                            <div class="section-score-header">
+                                <div class="section-score-value">{{ exam.english_score }}</div>
+                                <div class="section-score-range">| 200 to 800</div>
+                            </div>
+                            <div class="section-score-label">Your Evidence-Based Reading and Writing Score</div>
+                            <div class="benchmark-row">
+                                {% if exam.english_score >= 480 %}
+                                <div class="benchmark-badge"><i class="fas fa-check"></i> You've met the benchmark!</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="section-score-card">
+                            <div class="section-score-header">
+                                <div class="section-score-value">{{ exam.math_score }}</div>
+                                <div class="section-score-range">| 200 to 800</div>
+                            </div>
+                            <div class="section-score-label">Your Math Score</div>
+                            <div class="benchmark-row">
+                                {% if exam.math_score >= 530 %}
+                                <div class="benchmark-badge"><i class="fas fa-check"></i> You've met the benchmark!</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="info-box">
+                        <h4>Online Score Report</h4>
+                        <p>Go online to get more details about your performance, including areas of strength, and check out the action steps in Skills Insight to help you boost your college readiness.</p>
+                    </div>
+                    <div class="info-box">
+                        <h4>How Did I Score Compared to Others?</h4>
+                        <p>A percentile is a number between 1 and 99 that shows how your score ranks compared to other students. It represents the percentage of students whose scores are equal to or below yours.</p>
+                    </div>
+                    <div class="info-box">
+                        <h4>Am I on Track to Be Ready for College?</h4>
+                        <p>You'll see a benchmark score for each section of the SAT. The Evidence-Based Reading and Writing benchmark is 480 while the Math benchmark is 530.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-scores-section">
+                <h3 class="section-title">Test Scores | 10 to 40</h3>
+                <div class="test-scores-grid">
+                    <div class="test-score-item">
+                        <h4>{{ reading_score|default:"--" }} <span>| 10 to 40</span></h4>
+                        <p>Reading</p>
+                    </div>
+                    <div class="test-score-item">
+                        <h4>{{ writing_score|default:"--" }} <span>| 10 to 40</span></h4>
+                        <p>Writing and Language</p>
+                    </div>
+                    <div class="test-score-item">
+                        <h4>{{ math_test_score|default:"--" }} <span>| 10 to 40</span></h4>
+                        <p>Math</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="report-footer">
+                <span>Get your full report online <strong>satly.uz</strong></span>
+                <span class="certificate-id">Certificate ID: {{ exam.certificate_id|default:"SATLY-XXXXXXXX" }}</span>
+            </div>
+        </div>
+
+        <section class="analysis-section">
+            <h3 class="analysis-title"><i class="fas fa-chart-bar"></i> Detailed Score Analysis</h3>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h4><i class="fas fa-chart-pie"></i> Score Distribution</h4>
+                    <div class="chart-container">
+                        <canvas id="scoreChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h4><i class="fas fa-chart-line"></i> Module Performance</h4>
+                    <div class="chart-container">
+                        <canvas id="moduleChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="breakdown-grid">
+                <div class="breakdown-item">
+                    <span>English Module 1</span>
+                    <span>{{ exam.english_module1_score }}/27</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>English Module 2</span>
+                    <span>{{ exam.english_module2_score }}/27</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Math Module 1</span>
+                    <span>{{ exam.math_module1_score }}/22</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Math Module 2</span>
+                    <span>{{ exam.math_module2_score }}/22</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="actions">
+            <a href="{% url 'user_dashboard' %}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <button onclick="downloadCertificate()" class="btn btn-primary"><i class="fas fa-download"></i> Download Certificate</button>
+            <a href="{% url 'start_exam' %}" class="btn btn-primary"><i class="fas fa-redo"></i> Take Another Test</a>
+        </div>
+    </div>
+
+    <button class="download-btn-float" onclick="downloadCertificate()" title="Download Certificate">
+        <i class="fas fa-download"></i>
+    </button>
+
+    <script>
+        const scoreData = {
+            english: {{ exam.english_score }},
+            math: {{ exam.math_score }},
+            englishM1: {{ exam.english_module1_score }},
+            englishM2: {{ exam.english_module2_score }},
+            mathM1: {{ exam.math_module1_score }},
+            mathM2: {{ exam.math_module2_score }}
+        };
+
+        new Chart(document.getElementById('scoreChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['English (' + scoreData.english + ')', 'Math (' + scoreData.math + ')'],
+                datasets: [{
+                    data: [scoreData.english, scoreData.math],
+                    backgroundColor: ['#0077c8', '#10b981'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                },
+                cutout: '65%'
+            }
+        });
+
+        new Chart(document.getElementById('moduleChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Eng M1', 'Eng M2', 'Math M1', 'Math M2'],
+                datasets: [{
+                    label: 'Correct Answers',
+                    data: [scoreData.englishM1, scoreData.englishM2, scoreData.mathM1, scoreData.mathM2],
+                    backgroundColor: ['#0077c8', '#3b9ddb', '#10b981', '#34d399'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, max: 27, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        function downloadCertificate() {
+            const cert = document.getElementById('certificate');
+            const floatBtn = document.querySelector('.download-btn-float');
+            floatBtn.style.display = 'none';
+            
+            html2canvas(cert, { 
+                scale: 2, 
+                backgroundColor: '#ffffff',
+                useCORS: true,
+                allowTaint: true
+            }).then(canvas => {
+                floatBtn.style.display = 'flex';
+                const link = document.createElement('a');
+                link.download = 'SAT_Score_Report_{{ user.first_name }}_{{ user.last_name }}.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>

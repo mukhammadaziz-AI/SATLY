@@ -1,0 +1,198 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Sahifa topilmadi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #667eea;
+            --secondary: #10b981;
+            --dark: #1a202c;
+            --gray: #718096;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .error-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 3rem;
+            text-align: center;
+            animation: fadeIn 0.6s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .error-image {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            margin: 0 auto 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .error-code {
+            font-size: 6rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            line-height: 1;
+        }
+        
+        .error-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+        
+        .error-message {
+            font-size: 1.1rem;
+            color: var(--gray);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .error-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f7fafc;
+            color: var(--dark);
+            border: 2px solid #e2e8f0;
+        }
+        
+        .btn-secondary:hover {
+            background: #edf2f7;
+            transform: translateY(-2px);
+        }
+        
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .error-container {
+                padding: 2rem 1.5rem;
+            }
+            
+            .error-code {
+                font-size: 4rem;
+            }
+            
+            .error-title {
+                font-size: 1.5rem;
+            }
+            
+            .error-message {
+                font-size: 1rem;
+            }
+            
+            .error-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <!-- <img src="{% static 'images/404.jpg' %}" alt="404 Error" class="error-image"> -->
+        
+        <h1 class="error-code">404</h1>
+        <h2 class="error-title">Sahifa topilmadi</h2>
+        <p class="error-message">
+            Kechirasiz, siz qidirayotgan sahifa mavjud emas yoki o'chirilgan. 
+            URL manzilni tekshiring yoki bosh sahifaga qayting.
+        </p>
+        
+        <div class="error-buttons">
+            <a href="/" class="btn btn-primary">
+                <i class="fas fa-home"></i>
+                Bosh sahifa
+            </a>
+            <a href="javascript:history.back()" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Orqaga qaytish
+            </a>
+        </div>
+    </div>
+</body>
+</html>

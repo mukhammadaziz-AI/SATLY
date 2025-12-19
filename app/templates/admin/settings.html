@@ -1,0 +1,415 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400..800&family=Karla:wght@300;400;500;600;700&display=swap');
+
+    .settings-wrapper {
+        font-family: 'Karla', sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        min-height: 100vh;
+        margin: -32px;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .settings-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+        animation: float 20s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    .settings-wrapper::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+        animation: float 25s ease-in-out infinite reverse;
+        pointer-events: none;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(30px, -30px) scale(1.1); }
+    }
+
+    .settings-header {
+        position: relative;
+        z-index: 2;
+        margin-bottom: 3rem;
+        animation: slideDown 0.8s ease-out;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .settings-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #ec4899 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -2px;
+        margin-bottom: 0.5rem;
+    }
+
+    .settings-subtitle {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.95rem;
+        color: #94a3b8;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .settings-container {
+        position: relative;
+        z-index: 2;
+    }
+
+    .settings-section {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 24px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        animation: fadeIn 0.8s ease-out backwards;
+    }
+
+    .settings-section:nth-child(1) { animation-delay: 0.2s; }
+    .settings-section:nth-child(2) { animation-delay: 0.3s; }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .settings-section h3 {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f1f5f9;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .settings-section h3 i {
+        font-size: 1.3rem;
+        color: #60a5fa;
+    }
+
+    .settings-form {
+        display: grid;
+        gap: 2rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .form-group label {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.8rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        background: rgba(30, 41, 59, 0.6);
+        border: 2px solid rgba(148, 163, 184, 0.2);
+        border-radius: 12px;
+        font-family: 'Karla', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #f1f5f9;
+        transition: all 0.3s ease;
+    }
+
+    .form-group input::placeholder {
+        color: #64748b;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #60a5fa;
+        background: rgba(30, 41, 59, 0.8);
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+    }
+
+    .toggle-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .toggle-group:hover {
+        background: rgba(30, 41, 59, 0.6);
+        border-color: rgba(148, 163, 184, 0.3);
+    }
+
+    .toggle-group label:first-child {
+        font-family: 'Karla', sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #f1f5f9;
+        margin: 0;
+    }
+
+    .toggle {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 32px;
+    }
+
+    .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(100, 116, 139, 0.3);
+        border: 2px solid rgba(148, 163, 184, 0.2);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 32px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 3px;
+        bottom: 3px;
+        background: #cbd5e1;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 50%;
+    }
+
+    input:checked + .slider {
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        border-color: transparent;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(28px);
+        background: white;
+    }
+
+    .settings-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+        animation: fadeIn 0.8s ease-out 0.4s backwards;
+    }
+
+    .save-btn {
+        padding: 1rem 2.5rem;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        border: none;
+        border-radius: 12px;
+        font-family: 'Syne', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .save-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(59, 130, 246, 0.4);
+    }
+
+    .toast-message {
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 1.25rem 2rem;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        transform: translateX(400px);
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 10000;
+        font-family: 'Karla', sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .toast-message.show {
+        transform: translateX(0);
+    }
+
+    .toast-message i {
+        font-size: 1.5rem;
+    }
+</style>
+
+<div class="settings-wrapper">
+    <div class="settings-header">
+        <h1 class="settings-title">Settings</h1>
+        <p class="settings-subtitle">System Configuration</p>
+    </div>
+
+    <div class="settings-container">
+        <form id="settings-form" onsubmit="saveSettings(event)">
+            <div class="settings-section">
+                <h3>
+                    <i class="fas fa-cog"></i>
+                    General Settings
+                </h3>
+                <div class="settings-form">
+                    <div class="form-group">
+                        <label>Site Name</label>
+                        <input type="text" id="site_name" value="SATLY" placeholder="Site Name">
+                    </div>
+                    <div class="form-group">
+                        <label>Admin Email</label>
+                        <input type="email" id="admin_email" value="admin@satly.com" placeholder="Admin Email">
+                    </div>
+                    <div class="form-group">
+                        <label>Time Zone</label>
+                        <select id="timezone">
+                            <option value="UTC">UTC</option>
+                            <option value="Asia/Tashkent" selected>Asia/Tashkent</option>
+                            <option value="Europe/London">Europe/London</option>
+                            <option value="America/New_York">America/New York</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>
+                    <i class="fas fa-bell"></i>
+                    Notification Settings
+                </h3>
+                <div class="settings-form">
+                    <div class="toggle-group">
+                        <label>Email Notifications</label>
+                        <label class="toggle">
+                            <input type="checkbox" id="email_notifications" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-group">
+                        <label>New User Alerts</label>
+                        <label class="toggle">
+                            <input type="checkbox" id="new_user_alerts" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-group">
+                        <label>Daily Reports</label>
+                        <label class="toggle">
+                            <input type="checkbox" id="daily_reports">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-actions">
+                <button type="submit" class="save-btn">
+                    <i class="fas fa-save"></i>
+                    Save Settings
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="toast-message" class="toast-message">
+    <i class="fas fa-check-circle"></i>
+    <span>Settings saved successfully!</span>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function saveSettings(e) {
+    e.preventDefault();
+    
+    const settings = {
+        site_name: document.getElementById('site_name').value,
+        admin_email: document.getElementById('admin_email').value,
+        timezone: document.getElementById('timezone').value,
+        email_notifications: document.getElementById('email_notifications').checked,
+        new_user_alerts: document.getElementById('new_user_alerts').checked,
+        daily_reports: document.getElementById('daily_reports').checked
+    };
+    
+    localStorage.setItem('adminSettings', JSON.stringify(settings));
+    
+    showToast();
+}
+
+function showToast() {
+    const toast = document.getElementById('toast-message');
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const savedSettings = localStorage.getItem('adminSettings');
+    if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        document.getElementById('site_name').value = settings.site_name || 'SATLY';
+        document.getElementById('admin_email').value = settings.admin_email || 'admin@satly.com';
+        document.getElementById('timezone').value = settings.timezone || 'Asia/Tashkent';
+        document.getElementById('email_notifications').checked = settings.email_notifications !== false;
+        document.getElementById('new_user_alerts').checked = settings.new_user_alerts !== false;
+        document.getElementById('daily_reports').checked = settings.daily_reports || false;
+    }
+});
+</script>
+{% endblock %}

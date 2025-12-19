@@ -1,0 +1,803 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Payments Management{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400..800&family=Karla:wght@300;400;500;600;700&display=swap');
+
+    .payments-wrapper {
+        font-family: 'Karla', sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        min-height: 100vh;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .payments-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+        animation: float 20s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    .payments-wrapper::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+        animation: float 25s ease-in-out infinite reverse;
+        pointer-events: none;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(30px, -30px) scale(1.1); }
+    }
+
+    .payments-header {
+        position: relative;
+        z-index: 2;
+        margin-bottom: 3rem;
+        animation: slideDown 0.8s ease-out;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .payments-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #ec4899 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -2px;
+        margin-bottom: 0.5rem;
+        animation: glow 3s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+        0%, 100% { filter: brightness(1); }
+        50% { filter: brightness(1.3); }
+    }
+
+    .payments-subtitle {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.95rem;
+        color: #94a3b8;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .metric-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 24px;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: fadeIn 0.8s ease-out backwards;
+    }
+
+    .metric-card:nth-child(1) { animation-delay: 0.1s; }
+    .metric-card:nth-child(2) { animation-delay: 0.2s; }
+    .metric-card:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--card-gradient);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+    }
+
+    .metric-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .metric-card:hover {
+        transform: translateY(-8px);
+        border-color: rgba(148, 163, 184, 0.4);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .metric-card.blue { --card-gradient: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .metric-card.emerald { --card-gradient: linear-gradient(90deg, #10b981, #34d399); }
+    .metric-card.amber { --card-gradient: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+    .metric-icon-wrapper {
+        width: 70px;
+        height: 70px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        transition: all 0.4s ease;
+    }
+
+    .metric-card:hover .metric-icon-wrapper {
+        transform: rotate(5deg) scale(1.1);
+    }
+
+    .metric-card.blue .metric-icon-wrapper {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(96, 165, 250, 0.1));
+        color: #60a5fa;
+    }
+
+    .metric-card.emerald .metric-icon-wrapper {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(52, 211, 153, 0.1));
+        color: #34d399;
+    }
+
+    .metric-card.amber .metric-icon-wrapper {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.1));
+        color: #fbbf24;
+    }
+
+    .metric-label {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.8rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 0.75rem;
+    }
+
+    .metric-value {
+        font-family: 'Syne', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #f1f5f9;
+        letter-spacing: -1px;
+    }
+
+    .section-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 28px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        z-index: 2;
+        overflow: hidden;
+        animation: fadeIn 0.8s ease-out 0.4s backwards;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .section-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #a78bfa, #c084fc);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #fff;
+    }
+
+    .section-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #f1f5f9;
+        letter-spacing: -0.5px;
+    }
+
+    .section-description {
+        font-size: 0.9rem;
+        color: #94a3b8;
+        margin-top: 0.25rem;
+    }
+
+    .pricing-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+
+    .form-field {
+        position: relative;
+    }
+
+    .field-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.8rem;
+        color: #cbd5e1;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 1rem;
+    }
+
+    .field-label i {
+        font-size: 1rem;
+    }
+
+    .price-input-wrapper {
+        position: relative;
+    }
+
+    .price-input {
+        width: 100%;
+        padding: 1.25rem 1.25rem 1.25rem 4rem;
+        background: rgba(30, 41, 59, 0.6);
+        border: 2px solid rgba(148, 163, 184, 0.2);
+        border-radius: 16px;
+        font-family: 'Syne', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #f1f5f9;
+        transition: all 0.3s ease;
+    }
+
+    .price-input:focus {
+        outline: none;
+        border-color: #60a5fa;
+        background: rgba(30, 41, 59, 0.8);
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+    }
+
+    .currency-prefix {
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-family: 'Space Mono', monospace;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #64748b;
+        pointer-events: none;
+    }
+
+    .field-hint {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-top: 0.75rem;
+        font-style: italic;
+    }
+
+    .save-button {
+        grid-column: 1 / -1;
+        margin-top: 1rem;
+        padding: 1.25rem 3rem;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        border: none;
+        border-radius: 16px;
+        font-family: 'Syne', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .save-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .save-button:hover::before {
+        left: 100%;
+    }
+
+    .save-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(59, 130, 246, 0.4);
+    }
+
+    .save-button:active {
+        transform: translateY(0);
+    }
+
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .filter-select {
+        padding: 0.875rem 2.5rem 0.875rem 1.25rem;
+        background: rgba(30, 41, 59, 0.6);
+        border: 2px solid rgba(148, 163, 184, 0.2);
+        border-radius: 12px;
+        font-family: 'Karla', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #f1f5f9;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%2394a3b8' d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        transition: all 0.3s ease;
+    }
+
+    .filter-select:hover {
+        border-color: #60a5fa;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+    }
+
+    .transactions-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .transactions-table thead th {
+        padding: 1rem 1.25rem;
+        text-align: left;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        border-bottom: 2px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .transactions-table tbody td {
+        padding: 1.25rem;
+        color: #cbd5e1;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .transactions-table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .transactions-table tbody tr:hover {
+        background: rgba(96, 165, 250, 0.05);
+    }
+
+    .transactions-table tbody tr:hover td {
+        border-bottom-color: rgba(148, 163, 184, 0.2);
+    }
+
+    .transaction-id {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.8rem;
+        background: rgba(100, 116, 139, 0.2);
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        border-left: 3px solid #64748b;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .user-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Syne', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .user-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .user-name {
+        font-weight: 600;
+        color: #f1f5f9;
+    }
+
+    .user-email {
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+
+    .type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .type-badge.exam {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(96, 165, 250, 0.3);
+    }
+
+    .type-badge.subscription {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .amount {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #f1f5f9;
+    }
+
+    .payment-method {
+        font-weight: 600;
+        color: #94a3b8;
+        text-transform: capitalize;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-badge.completed {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .status-badge.pending {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .status-badge.failed {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(248, 113, 113, 0.3);
+    }
+
+    .transaction-date {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+        display: block;
+    }
+
+    .empty-state-text {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+</style>
+
+<div class="payments-wrapper">
+    <div class="payments-header">
+        <h1 class="payments-title">Payments Control</h1>
+        <p class="payments-subtitle">Transaction Oversight & Price Configuration</p>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="metric-card blue">
+            <div class="metric-icon-wrapper">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="metric-label">Total Revenue</div>
+            <div class="metric-value" id="totalRevenue">0 so'm</div>
+        </div>
+
+        <div class="metric-card emerald">
+            <div class="metric-icon-wrapper">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="metric-label">Exam Purchases</div>
+            <div class="metric-value" id="examPurchases">0</div>
+        </div>
+
+        <div class="metric-card amber">
+            <div class="metric-icon-wrapper">
+                <i class="fas fa-crown"></i>
+            </div>
+            <div class="metric-label">Subscriptions</div>
+            <div class="metric-value" id="subscriptionCount">0</div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="fas fa-tag"></i>
+            </div>
+            <div>
+                <h2 class="section-title">Pricing Configuration</h2>
+                <p class="section-description">Define test and subscription pricing models</p>
+            </div>
+        </div>
+
+        <form id="pricingForm" class="pricing-form">
+            <div class="form-field">
+                <label class="field-label">
+                    <i class="fas fa-file-alt" style="color: #60a5fa;"></i>
+                    Exam Test Price
+                </label>
+                <div class="price-input-wrapper">
+                    <span class="currency-prefix">UZS</span>
+                    <input type="number" id="examPrice" name="exam_price" required class="price-input" placeholder="0">
+                </div>
+                <div class="field-hint">Per single test attempt</div>
+            </div>
+
+            <div class="form-field">
+                <label class="field-label">
+                    <i class="fas fa-crown" style="color: #fbbf24;"></i>
+                    Monthly Subscription
+                </label>
+                <div class="price-input-wrapper">
+                    <span class="currency-prefix">UZS</span>
+                    <input type="number" id="subscriptionPrice" name="subscription_price" required class="price-input" placeholder="0">
+                </div>
+                <div class="field-hint">Unlimited tests per month</div>
+            </div>
+
+            <button type="submit" class="save-button">
+                <i class="fas fa-save"></i> Save Configuration
+            </button>
+        </form>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-icon">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div>
+                <h2 class="section-title">Transaction History</h2>
+                <p class="section-description">Comprehensive payment records</p>
+            </div>
+        </div>
+
+        <div class="table-controls">
+            <select id="filterType" class="filter-select">
+                <option value="">All Transactions</option>
+                <option value="exam">Exam Purchases</option>
+                <option value="subscription">Subscriptions</option>
+            </select>
+        </div>
+
+        <table class="transactions-table">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>User</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="paymentsTableBody">
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <div class="empty-state-text">Loading transactions...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let allPayments = [];
+
+    async function loadPricingSettings() {
+        try {
+            const response = await fetch('/api/admin/pricing-settings/');
+            const data = await response.json();
+            document.getElementById('examPrice').value = data.exam_price;
+            document.getElementById('subscriptionPrice').value = data.subscription_price;
+        } catch (error) {
+            console.error('Error loading pricing:', error);
+        }
+    }
+
+    async function loadPayments() {
+        try {
+            const response = await fetch('/api/admin/payments/');
+            const data = await response.json();
+            allPayments = data.payments;
+            
+            document.getElementById('totalRevenue').textContent = data.total_revenue.toLocaleString() + ' so\'m';
+            document.getElementById('examPurchases').textContent = data.exam_count;
+            document.getElementById('subscriptionCount').textContent = data.subscription_count;
+            
+            renderPayments(allPayments);
+        } catch (error) {
+            console.error('Error loading payments:', error);
+        }
+    }
+
+    function renderPayments(payments) {
+        const tbody = document.getElementById('paymentsTableBody');
+        
+        if (payments.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <div class="empty-state-text">No transactions found</div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = payments.map(payment => {
+            const typeIcon = payment.payment_type === 'exam' ? 'fa-file-alt' : 'fa-crown';
+            const typeClass = payment.payment_type === 'exam' ? 'exam' : 'subscription';
+            const typeText = payment.payment_type === 'exam' ? 'Exam' : 'Subscription';
+            
+            const date = new Date(payment.created_at).toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            return `
+                <tr>
+                    <td><code class="transaction-id">${payment.transaction_id}</code></td>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar">${payment.user_name.charAt(0).toUpperCase()}</div>
+                            <div class="user-details">
+                                <div class="user-name">${payment.user_name}</div>
+                                <div class="user-email">${payment.user_email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="type-badge ${typeClass}">
+                            <i class="fas ${typeIcon}"></i> ${typeText}
+                        </span>
+                    </td>
+                    <td class="amount">${parseFloat(payment.amount).toLocaleString()} UZS</td>
+                    <td class="payment-method">${payment.payment_method}</td>
+                    <td><span class="status-badge ${payment.status}">${payment.status}</span></td>
+                    <td class="transaction-date">${date}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    document.getElementById('pricingForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const examPrice = document.getElementById('examPrice').value;
+        const subscriptionPrice = document.getElementById('subscriptionPrice').value;
+
+        try {
+            const response = await fetch('/api/admin/pricing-settings/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    exam_price: examPrice,
+                    subscription_price: subscriptionPrice
+                })
+            });
+
+            if (response.ok) {
+                alert('Pricing settings updated successfully!');
+            } else {
+                alert('Failed to update pricing settings');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while updating pricing');
+        }
+    });
+
+    document.getElementById('filterType').addEventListener('change', (e) => {
+        const filterValue = e.target.value;
+        if (filterValue === '') {
+            renderPayments(allPayments);
+        } else {
+            const filtered = allPayments.filter(p => p.payment_type === filterValue);
+            renderPayments(filtered);
+        }
+    });
+
+    loadPricingSettings();
+    loadPayments();
+</script>
+{% endblock %}

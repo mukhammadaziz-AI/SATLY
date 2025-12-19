@@ -1,0 +1,605 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To'lov qilish - SATLY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --light: #f8fafc;
+            --gradient: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .payment-container {
+            max-width: 900px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .payment-main {
+            background: white;
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        }
+        .payment-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .back-btn {
+            width: 45px;
+            height: 45px;
+            background: var(--light);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+            transition: all 0.3s;
+        }
+        .back-btn:hover {
+            background: #e2e8f0;
+            color: var(--primary);
+        }
+        .payment-header h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+        }
+        .timer-display {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #dc2626;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .payment-methods {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .payment-method {
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .payment-method:hover {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+        .payment-method.active {
+            border-color: var(--primary);
+            background: #f0f9ff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+        .payment-method input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary);
+        }
+        .payment-icons {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        .payment-icons img {
+            height: 35px;
+            width: auto;
+            object-fit: contain;
+        }
+        .payment-label {
+            flex: 1;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .card-form {
+            display: none;
+            margin-top: 1.5rem;
+            animation: slideDown 0.3s ease;
+        }
+        .card-form.active {
+            display: block;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; max-height: 0; }
+            to { opacity: 1; max-height: 500px; }
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .card-icons {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 0.5rem;
+        }
+        .card-icons img {
+            height: 25px;
+            opacity: 0.5;
+        }
+        .btn-pay {
+            width: 100%;
+            padding: 1.25rem;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+        .btn-pay:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
+        .btn-pay:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-cancel {
+            width: 100%;
+            padding: 1rem;
+            background: white;
+            color: #dc2626;
+            border: 2px solid #fee2e2;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+        .btn-cancel:hover {
+            background: #fef2f2;
+        }
+        .payment-sidebar {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+        .order-summary h3 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .summary-item:last-of-type {
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1.25rem;
+        }
+        .summary-item span:first-child {
+            color: var(--gray);
+        }
+        .summary-item span:last-child {
+            font-weight: 700;
+        }
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .summary-total span:first-child {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .summary-total span:last-child {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        .security-badge {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .security-badge i {
+            color: var(--secondary);
+            font-size: 1.25rem;
+        }
+        .security-badge p {
+            font-size: 0.85rem;
+            color: #15803d;
+            font-weight: 600;
+        }
+        .payment-info {
+            background: var(--light);
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 0.85rem;
+            color: var(--gray);
+            line-height: 1.6;
+        }
+        .payment-info i {
+            color: var(--primary);
+            margin-right: 0.5rem;
+        }
+        .toast-notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: white;
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 9999;
+            transform: translateX(150%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid #f59e0b;
+        }
+        .toast-notification.show {
+            transform: translateX(0);
+        }
+        .toast-notification .toast-icon {
+            width: 45px;
+            height: 45px;
+            background: #fef3c7;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f59e0b;
+            font-size: 1.25rem;
+        }
+        .toast-notification .toast-content h4 {
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+        .toast-notification .toast-content p {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        @media (max-width: 768px) {
+            .payment-container {
+                grid-template-columns: 1fr;
+            }
+            .payment-sidebar {
+                order: -1;
+            }
+        }
+        .coming-soon {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="toast-notification" id="toast">
+        <div class="toast-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="toast-content">
+            <h4>Vaqt tugadi!</h4>
+            <p>Sizning to'lov qilish vaqtingiz tugadi.</p>
+        </div>
+    </div>
+
+    <div class="payment-container">
+        <div class="payment-main">
+            <div class="payment-header">
+                <button class="back-btn" onclick="window.history.back()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h1>To'lov usulini tanlang</h1>
+                <div class="timer-display">
+                    <i class="fas fa-clock"></i>
+                    <span id="timer">39:58</span>
+                </div>
+            </div>
+
+            <form id="paymentForm" method="POST">
+                {% csrf_token %}
+                <div class="payment-methods">
+                    <label class="payment-method active" for="uzcard">
+                        <input type="radio" name="payment_method" id="uzcard" value="uzcard" checked>
+                        <div class="payment-icons" style="gap: 0.5rem;">
+                            <img src="{% static 'images/uzcard-icon.png' %}" alt="Uzcard" style="height: 40px;">
+                            <img src="{% static 'images/humo-icon.png' %}" alt="Humo" style="height: 40px;">
+                        </div>
+                        <span class="payment-label">Uzcard / Humo</span>
+                    </label>
+
+                    <label class="payment-method" for="click">
+                        <input type="radio" name="payment_method" id="click" value="click">
+                        <div class="payment-icons">
+                            <img src="{% static 'images/click.png' %}" alt="Click" style="height: 40px; width: auto;">
+                        </div>
+                        <span class="payment-label">Click</span>
+                        <span class="coming-soon">Tez orada</span>
+                    </label>
+
+                    <label class="payment-method" for="payme">
+                        <input type="radio" name="payment_method" id="payme" value="payme">
+                        <div class="payment-icons">
+                            <img src="{% static 'images/payme.png' %}" alt="Payme" style="height: 40px; width: auto;">
+                        </div>
+                        <span class="payment-label">Payme</span>
+                        <span class="coming-soon">Tez orada</span>
+                    </label>
+                </div>
+
+                <div id="cardForm" class="card-form active">
+                    <p class="section-title">Karta ma'lumotlari</p>
+                    
+                    <div class="form-group" style="position: relative;">
+                        <label class="form-label">Karta raqami</label>
+                        <input type="text" name="card_number" id="cardNumber" class="form-input" 
+                               placeholder="____ ____ ____ ____" 
+                               maxlength="19" required>
+                        <div class="card-icons">
+                            <img src="{% static 'images/humo_uzcard.png' %}" alt="Cards" style="height: 28px; opacity: 1; margin-top: 25px;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Amal qilish muddati</label>
+                        <input type="text" name="card_expiry" id="cardExpiry" class="form-input" 
+                               placeholder="MM/YY" 
+                               maxlength="5" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Karta egasining ismi</label>
+                        <input type="text" name="card_holder" id="cardHolder" class="form-input" 
+                               placeholder="FIRSTNAME LASTNAME" 
+                               style="text-transform: uppercase;" required>
+                    </div>
+
+                    <button type="submit" class="btn-pay">
+                        To'lovni amalga oshirish
+                    </button>
+                </div>
+
+                <button type="button" class="btn-cancel" onclick="window.history.back()">
+                    Bekor qilish
+                </button>
+            </form>
+        </div>
+
+        <div class="payment-sidebar">
+            <div class="order-summary">
+                <h3>Buyurtma tafsilotlari</h3>
+                
+                <div class="summary-item">
+                    <span>Test narxi:</span>
+                    <span id="testPrice">{{ settings.exam_price|floatformat:0 }} so'm</span>
+                </div>
+                <div class="summary-item">
+                    <span>To'lov xizmati:</span>
+                    <span>0 so'm</span>
+                </div>
+                <div class="summary-item">
+                    <span>Jami:</span>
+                    <span id="totalPrice">{{ settings.exam_price|floatformat:0 }} so'm</span>
+                </div>
+
+                <div class="summary-total">
+                    <span>To'lovga:</span>
+                    <span id="finalPrice">{{ settings.exam_price|floatformat:0 }} so'm</span>
+                </div>
+
+                <div class="security-badge">
+                    <i class="fas fa-shield-alt"></i>
+                    <p>Xavfsiz to'lov. Barcha ma'lumotlar shifrlangan</p>
+                </div>
+
+                <div class="payment-info">
+                    <p><i class="fas fa-info-circle"></i> To'lov muvaffaqiyatli amalga oshirilgandan so'ng testni boshlashingiz mumkin.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch latest prices from server
+        async function loadLatestPrices() {
+            try {
+                const response = await fetch('/api/pricing/');
+                if (response.ok) {
+                    const data = await response.json();
+                    const examPrice = parseFloat(data.exam_price);
+                    
+                    document.getElementById('testPrice').textContent = Math.floor(examPrice).toLocaleString('uz-UZ') + ' so\'m';
+                    document.getElementById('totalPrice').textContent = Math.floor(examPrice).toLocaleString('uz-UZ') + ' so\'m';
+                    document.getElementById('finalPrice').textContent = Math.floor(examPrice).toLocaleString('uz-UZ') + ' so\'m';
+                }
+            } catch (error) {
+                console.error('Failed to load prices:', error);
+            }
+        }
+        
+        // Load prices when page loads
+        loadLatestPrices();
+      
+        // Timer countdown (5 minutes)
+        let timeLeft = 5 * 60;
+        const timerElement = document.getElementById('timer');
+        const toast = document.getElementById('toast');
+        
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                toast.classList.add('show');
+                setTimeout(() => {
+                    window.location.href = "{% url 'user_dashboard' %}";
+                }, 3000);
+            } else {
+                timeLeft--;
+            }
+        }
+        
+        setInterval(updateTimer, 1000);
+
+        // Card number formatting
+        document.getElementById('cardNumber').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+        });
+
+        // Expiry date formatting
+        document.getElementById('cardExpiry').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.slice(0, 2) + '/' + value.slice(2, 4);
+            }
+            e.target.value = value;
+        });
+
+        // Payment method toggle
+        document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.payment-method').forEach(method => {
+                    method.classList.remove('active');
+                });
+                this.closest('.payment-method').classList.add('active');
+                
+                const cardForm = document.getElementById('cardForm');
+                const payBtn = document.querySelector('.btn-pay');
+                
+                if (this.value === 'uzcard') {
+                    cardForm.classList.add('active');
+                    payBtn.disabled = false;
+                } else {
+                    cardForm.classList.remove('active');
+                    payBtn.disabled = true;
+                    payBtn.innerHTML = '<i class="fas fa-clock"></i> Tez orada mavjud bo\'ladi';
+                }
+            });
+        });
+
+        // Form submission
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+            
+            if (paymentMethod !== 'uzcard') {
+                alert('Bu to\'lov usuli hozircha mavjud emas. Iltimos, Uzcard/Humo ni tanlang.');
+                return;
+            }
+            
+            const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+            const cardExpiry = document.getElementById('cardExpiry').value;
+            const cardHolder = document.getElementById('cardHolder').value;
+            
+            if (cardNumber.length !== 16) {
+                alert('Karta raqami 16 raqamdan iborat bo\'lishi kerak');
+                return;
+            }
+            
+            if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
+                alert('Amal qilish muddati MM/YY formatida bo\'lishi kerak');
+                return;
+            }
+            
+            if (cardHolder.length < 3) {
+                alert('Karta egasining ismini to\'liq kiriting');
+                return;
+            }
+            
+            this.submit();
+        });
+    </script>
+</body>
+</html>

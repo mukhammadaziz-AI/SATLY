@@ -1,0 +1,293 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress - SATLY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --light: #f8fafc;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+        }
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+        .logo img { height: 45px; width: auto; }
+        .nav-links { display: flex; gap: 1rem; }
+        .nav-links a {
+            padding: 0.6rem 1.25rem;
+            text-decoration: none;
+            color: var(--gray);
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            background: #dbeafe;
+            color: var(--primary);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        .page-header p { color: var(--gray); }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .stat-card h4 { font-size: 2rem; font-weight: 800; color: var(--primary); }
+        .stat-card span { font-size: 0.9rem; color: var(--gray); }
+        .chart-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .chart-section h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        .results-table {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .results-table h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            font-size: 0.8rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .score-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+        .score-high { background: #d1fae5; color: #059669; }
+        .score-mid { background: #fef3c7; color: #d97706; }
+        .score-low { background: #fee2e2; color: #dc2626; }
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        .no-results i {
+            font-size: 5rem;
+            color: #e2e8f0;
+            margin-bottom: 1rem;
+        }
+        .no-results h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .no-results p {
+            color: var(--gray);
+            margin-bottom: 1.5rem;
+        }
+        .btn-start {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">
+            <img src="{% static 'images/satly-logo.png' %}" alt="SATLY">
+        </a>
+        <div class="nav-links">
+            <a href="{% url 'user_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="{% url 'user_progress' %}" class="active"><i class="fas fa-chart-line"></i> Progress</a>
+            <a href="{% url 'user_settings' %}"><i class="fas fa-cog"></i> Settings</a>
+            <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1>Your Progress</h1>
+            <p>Track your SAT preparation journey</p>
+        </div>
+        
+        {% if no_results %}
+        <div class="chart-section no-results">
+            <i class="fas fa-clipboard-list"></i>
+            <h2>Siz hali test yechmagansiz</h2>
+            <p>Birinchi testingizni yechib, progressingizni kuzating</p>
+            <a href="{% url 'start_exam' %}" class="btn-start">
+                <i class="fas fa-play"></i> Start New Test
+            </a>
+        </div>
+        {% else %}
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>{{ total_tests }}</h4>
+                <span>Tests Completed</span>
+            </div>
+            <div class="stat-card">
+                <h4>{{ best_score }}</h4>
+                <span>Best Score</span>
+            </div>
+            <div class="stat-card">
+                <h4>{{ avg_score }}</h4>
+                <span>Average Score</span>
+            </div>
+            <div class="stat-card">
+                <h4>{{ user.target_score }}</h4>
+                <span>Target Score</span>
+            </div>
+        </div>
+        
+        <div class="chart-section">
+            <h3>Score Progress</h3>
+            <canvas id="progressChart" height="100"></canvas>
+        </div>
+        
+        <div class="results-table">
+            <h3>Test History</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Total Score</th>
+                        <th>English</th>
+                        <th>Math</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exam in exam_sessions %}
+                    <tr>
+                        <td>{{ exam.completed_at|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="score-badge {% if exam.total_score >= 1400 %}score-high{% elif exam.total_score >= 1100 %}score-mid{% else %}score-low{% endif %}">
+                                {{ exam.total_score }}
+                            </span>
+                        </td>
+                        <td>{{ exam.english_score }}</td>
+                        <td>{{ exam.math_score }}</td>
+                        <td><a href="{% url 'exam_result' exam.id %}" style="color: var(--primary);">View Details</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if not no_results %}
+    <script>
+        const scoresData = {{ scores_data|safe }};
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: scoresData.map(d => d.date),
+                datasets: [{
+                    label: 'Total Score',
+                    data: scoresData.map(d => d.total),
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'English',
+                    data: scoresData.map(d => d.english),
+                    borderColor: '#10b981',
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.4
+                }, {
+                    label: 'Math',
+                    data: scoresData.map(d => d.math),
+                    borderColor: '#f59e0b',
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: false, min: 200, max: 1600 } }
+            }
+        });
+    </script>
+    {% endif %}
+</body>
+</html>

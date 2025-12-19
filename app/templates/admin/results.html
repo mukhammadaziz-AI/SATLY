@@ -1,0 +1,349 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Test Results{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400..800&family=Karla:wght@300;400;500;600;700&display=swap');
+
+    .results-wrapper {
+        font-family: 'Karla', sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        min-height: 100vh;
+        margin: -32px;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .results-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+        animation: float 20s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    .results-wrapper::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+        animation: float 25s ease-in-out infinite reverse;
+        pointer-events: none;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(30px, -30px) scale(1.1); }
+    }
+
+    .results-header {
+        position: relative;
+        z-index: 2;
+        margin-bottom: 3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: slideDown 0.8s ease-out;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .results-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #ec4899 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -2px;
+        margin-bottom: 0.5rem;
+    }
+
+    .results-subtitle {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.95rem;
+        color: #94a3b8;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .search-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 1.25rem;
+        color: #94a3b8;
+        pointer-events: none;
+    }
+
+    .search-box input {
+        padding: 1rem 1.25rem 1rem 3rem;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 2px solid rgba(148, 163, 184, 0.2);
+        border-radius: 12px;
+        font-family: 'Karla', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #f1f5f9;
+        width: 350px;
+        transition: all 0.3s ease;
+    }
+
+    .search-box input::placeholder {
+        color: #64748b;
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: #60a5fa;
+        background: rgba(30, 41, 59, 0.8);
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+    }
+
+    .table-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 28px;
+        padding: 2.5rem;
+        position: relative;
+        z-index: 2;
+        animation: fadeIn 0.8s ease-out 0.4s backwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .results-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .results-table thead th {
+        padding: 1rem 1.25rem;
+        text-align: left;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        border-bottom: 2px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .results-table tbody td {
+        padding: 1.25rem;
+        color: #cbd5e1;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        font-size: 0.95rem;
+    }
+
+    .results-table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .results-table tbody tr:hover {
+        background: rgba(96, 165, 250, 0.05);
+    }
+
+    .category-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .category-badge.english {
+        background: rgba(102, 126, 234, 0.15);
+        color: #a78bfa;
+        border: 1px solid rgba(167, 139, 250, 0.3);
+    }
+
+    .category-badge.math {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .score-cell {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #60a5fa;
+    }
+
+    .band-score {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #60a5fa, #a78bfa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .time-cell {
+        font-family: 'Space Mono', monospace;
+        color: #94a3b8;
+    }
+
+    .user-email {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+
+    .loading, .no-data {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+        font-family: 'Syne', sans-serif;
+        font-size: 1.2rem;
+    }
+
+    .loading i {
+        font-size: 2rem;
+        color: #60a5fa;
+        margin-bottom: 1rem;
+        display: block;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+<div class="results-wrapper">
+    <div class="results-header">
+        <div>
+            <h1 class="results-title">Test Results</h1>
+            <p class="results-subtitle">All User Test Results</p>
+        </div>
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="search-input" placeholder="Search by user, email or test..." onkeyup="handleSearch()">
+        </div>
+    </div>
+
+    <div class="table-card">
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Test</th>
+                    <th>Category</th>
+                    <th>Score</th>
+                    <th>Band Score</th>
+                    <th>Time Spent</th>
+                    <th>Completed At</th>
+                </tr>
+            </thead>
+            <tbody id="results-table-body">
+                <tr>
+                    <td colspan="8" class="loading">
+                        <i class="fas fa-spinner"></i>
+                        Loading results...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let allResults = [];
+
+document.addEventListener('DOMContentLoaded', loadResults);
+
+async function loadResults() {
+    try {
+        const response = await fetch('/api/results/');
+        const result = await response.json();
+        allResults = result.data;
+        renderResults(allResults);
+    } catch (error) {
+        console.error('Error loading results:', error);
+        document.getElementById('results-table-body').innerHTML = 
+            '<tr><td colspan="8" class="no-data">Failed to load results</td></tr>';
+    }
+}
+
+function renderResults(results) {
+    const tbody = document.getElementById('results-table-body');
+    
+    if (results.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="no-data">No results found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = results.map(r => `
+        <tr>
+            <td><strong>${r.user_name}</strong></td>
+            <td><span class="user-email">${r.user_email}</span></td>
+            <td>${r.test_title}</td>
+            <td>
+                <span class="category-badge ${r.test_category}">
+                    <i class="fas ${r.test_category === 'english' ? 'fa-book-open' : 'fa-calculator'}"></i>
+                    ${r.test_category}
+                </span>
+            </td>
+            <td><span class="score-cell">${r.score.toFixed(1)}%</span></td>
+            <td><span class="band-score">${r.band_score.toFixed(1)}</span></td>
+            <td><span class="time-cell">${formatTime(r.time_spent)}</span></td>
+            <td>${r.completed_at}</td>
+        </tr>
+    `).join('');
+}
+
+function handleSearch() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    
+    const filtered = allResults.filter(r => 
+        r.user_name.toLowerCase().includes(searchTerm) ||
+        r.user_email.toLowerCase().includes(searchTerm) ||
+        r.test_title.toLowerCase().includes(searchTerm) ||
+        r.test_category.toLowerCase().includes(searchTerm)
+    );
+    
+    renderResults(filtered);
+}
+
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,309 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - SATLY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --light: #f8fafc;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+        }
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+        .logo img { height: 45px; width: auto; }
+        .nav-links { display: flex; gap: 1rem; }
+        .nav-links a {
+            padding: 0.6rem 1.25rem;
+            text-decoration: none;
+            color: var(--gray);
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            background: #dbeafe;
+            color: var(--primary);
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        .page-header p { color: var(--gray); }
+        .settings-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            margin-bottom: 1.5rem;
+        }
+        .settings-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .avatar-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .avatar-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 20px;
+            background: #e2e8f0;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--gray);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .avatar-preview:hover::after {
+            content: 'Change';
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .btn-save {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .alert-success {
+            background: #d1fae5;
+            color: #059669;
+        }
+        @media (max-width: 768px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">
+            <img src="{% static 'images/satly-logo.png' %}" alt="SATLY">
+        </a>
+        <div class="nav-links">
+            <a href="{% url 'user_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="{% url 'user_progress' %}"><i class="fas fa-chart-line"></i> Progress</a>
+            <a href="{% url 'user_settings' %}" class="active"><i class="fas fa-cog"></i> Settings</a>
+            <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1>Settings</h1>
+            <p>Manage your profile and preferences</p>
+        </div>
+        
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="settings-card">
+                <h3><i class="fas fa-user-circle"></i> Profile Photo</h3>
+                <div class="avatar-section">
+                    <div class="avatar-preview" onclick="document.getElementById('avatarInput').click()">
+                        {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" alt="Avatar" id="avatarPreview">
+                        {% else %}
+                        <i class="fas fa-user" id="avatarIcon"></i>
+                        <img src="" alt="" id="avatarPreview" style="display: none;">
+                        {% endif %}
+                    </div>
+                    <p style="color: var(--gray); font-size: 0.9rem;">{% if user.avatar %}Rasmni o'zgartirish uchun bosing{% else %}Rasm qo'shish uchun bosing{% endif %}</p>
+                    <input type="file" name="avatar" id="avatarInput" accept="image/*" style="display: none;">
+                </div>
+            </div>
+            
+            <div class="settings-card">
+                <h3><i class="fas fa-id-card"></i> Personal Information</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}" placeholder="Enter first name">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" name="last_name" value="{{ user.last_name }}" placeholder="Enter last name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" value="{{ user.email }}" disabled style="background: #f1f5f9;">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" name="phone" value="{{ user.phone }}" placeholder="+998 XX XXX XX XX">
+                    </div>
+                    <div class="form-group">
+                        <label>Telegram Username</label>
+                        <input type="text" name="telegram" value="{{ user.telegram_username }}" placeholder="@username">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-card">
+                <h3><i class="fas fa-graduation-cap"></i> Learning Preferences</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>English Level</label>
+                        <select name="english_level">
+                            <option value="beginner" {% if user.english_level == 'beginner' %}selected{% endif %}>Beginner</option>
+                            <option value="elementary" {% if user.english_level == 'elementary' %}selected{% endif %}>Elementary</option>
+                            <option value="pre-intermediate" {% if user.english_level == 'pre-intermediate' %}selected{% endif %}>Pre-Intermediate</option>
+                            <option value="intermediate" {% if user.english_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                            <option value="upper-intermediate" {% if user.english_level == 'upper-intermediate' %}selected{% endif %}>Upper-Intermediate</option>
+                            <option value="advanced" {% if user.english_level == 'advanced' %}selected{% endif %}>Advanced</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Target SAT Score</label>
+                        <select name="target_score">
+                            <option value="1200" {% if user.target_score == 1200 %}selected{% endif %}>1200+</option>
+                            <option value="1300" {% if user.target_score == 1300 %}selected{% endif %}>1300+</option>
+                            <option value="1400" {% if user.target_score == 1400 %}selected{% endif %}>1400+</option>
+                            <option value="1500" {% if user.target_score == 1500 %}selected{% endif %}>1500+</option>
+                            <option value="1550" {% if user.target_score == 1550 %}selected{% endif %}>1550+</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-save">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+        </form>
+    </div>
+    
+    <script>
+        document.getElementById('avatarInput').addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('avatarPreview');
+                    const icon = document.getElementById('avatarIcon');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    if (icon) icon.style.display = 'none';
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    </script>
+</body>
+</html>

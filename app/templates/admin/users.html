@@ -1,0 +1,704 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400..800&family=Karla:wght@300;400;500;600;700&display=swap');
+
+    .users-wrapper {
+        font-family: 'Karla', sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        min-height: 100vh;
+        margin: -32px;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .users-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+        animation: float 20s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    .users-wrapper::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+        animation: float 25s ease-in-out infinite reverse;
+        pointer-events: none;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(30px, -30px) scale(1.1); }
+    }
+
+    .users-header {
+        position: relative;
+        z-index: 2;
+        margin-bottom: 3rem;
+        animation: slideDown 0.8s ease-out;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .users-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #ec4899 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -2px;
+        margin-bottom: 0.5rem;
+    }
+
+    .users-subtitle {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.95rem;
+        color: #94a3b8;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .filters-section {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 24px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        z-index: 2;
+        animation: fadeIn 0.8s ease-out 0.2s backwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto;
+        gap: 1.5rem;
+        align-items: end;
+    }
+
+    .filter-field label {
+        display: block;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.8rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.75rem;
+    }
+
+    .search-input, .filter-select {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        background: rgba(30, 41, 59, 0.6);
+        border: 2px solid rgba(148, 163, 184, 0.2);
+        border-radius: 12px;
+        font-family: 'Karla', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #f1f5f9;
+        transition: all 0.3s ease;
+    }
+
+    .search-input::placeholder {
+        color: #64748b;
+    }
+
+    .search-input:focus, .filter-select:focus {
+        outline: none;
+        border-color: #60a5fa;
+        background: rgba(30, 41, 59, 0.8);
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+    }
+
+    .filter-button {
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        border: none;
+        border-radius: 12px;
+        font-family: 'Syne', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .filter-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(59, 130, 246, 0.4);
+    }
+
+    .table-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 28px;
+        padding: 2.5rem;
+        position: relative;
+        z-index: 2;
+        animation: fadeIn 0.8s ease-out 0.4s backwards;
+    }
+
+    .users-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .users-table thead th {
+        padding: 1rem 1.25rem;
+        text-align: left;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        border-bottom: 2px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .users-table tbody td {
+        padding: 1.25rem;
+        color: #cbd5e1;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        font-size: 0.95rem;
+    }
+
+    .users-table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .users-table tbody tr:hover {
+        background: rgba(96, 165, 250, 0.05);
+    }
+
+    .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .user-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Syne', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .user-name {
+        font-weight: 600;
+        color: #f1f5f9;
+        font-size: 1rem;
+    }
+
+    .user-email {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-family: 'Space Mono', monospace;
+    }
+
+    .subscription-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .subscription-badge.active {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .subscription-badge.inactive {
+        background: rgba(100, 116, 139, 0.15);
+        color: #94a3b8;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    .band-score {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #60a5fa;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .action-btn.view {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(96, 165, 250, 0.3);
+    }
+
+    .action-btn.view:hover {
+        background: rgba(59, 130, 246, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .action-btn.delete {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(248, 113, 113, 0.3);
+    }
+
+    .action-btn.delete:hover {
+        background: rgba(239, 68, 68, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+        display: block;
+    }
+
+    .empty-state-text {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        animation: modalFadeIn 0.3s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal.show {
+        display: flex;
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 28px;
+        width: 90%;
+        max-width: 700px;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: modalSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes modalSlideUp {
+        from { opacity: 0; transform: translateY(50px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2rem 2.5rem;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .modal-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #f1f5f9;
+    }
+
+    .close-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: rgba(100, 116, 139, 0.2);
+        border: none;
+        color: #94a3b8;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .close-btn:hover {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+    }
+
+    .modal-body {
+        padding: 2.5rem;
+    }
+
+    .detail-section {
+        margin-bottom: 2rem;
+    }
+
+    .detail-section-title {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.8rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 1rem;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .detail-item {
+        background: rgba(30, 41, 59, 0.4);
+        padding: 1.25rem;
+        border-radius: 16px;
+        border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .detail-label {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin-bottom: 0.5rem;
+    }
+
+    .detail-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #f1f5f9;
+    }
+</style>
+
+<div class="users-wrapper">
+    <div class="users-header">
+        <h1 class="users-title">User Management</h1>
+        <p class="users-subtitle">Comprehensive User Directory</p>
+    </div>
+
+    <div class="filters-section">
+        <div class="filters-grid">
+            <div class="filter-field">
+                <label>Search Users</label>
+                <input type="text" id="searchInput" class="search-input" placeholder="Name, email, or phone...">
+            </div>
+            <div class="filter-field">
+                <label>Subscription</label>
+                <select id="subscriptionFilter" class="filter-select">
+                    <option value="">All</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label>Sort By</label>
+                <select id="sortBy" class="filter-select">
+                    <option value="date">Join Date</option>
+                    <option value="band">Band Score</option>
+                    <option value="tests">Tests Count</option>
+                </select>
+            </div>
+            <button class="filter-button" onclick="applyFilters()">
+                <i class="fas fa-filter"></i> Apply
+            </button>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Phone</th>
+                    <th>Subscription</th>
+                    <th>Band Score</th>
+                    <th>Tests</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody">
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <div class="empty-state-text">Loading users...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="userModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">User Details</h3>
+            <button class="close-btn" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <!-- Dynamic content -->
+        </div>
+    </div>
+</div>
+
+<script>
+    let allUsers = [];
+
+    async function loadUsers() {
+        try {
+            const response = await fetch('/api/admin/users/');
+            const data = await response.json();
+            allUsers = data.users;
+            renderUsers(allUsers);
+        } catch (error) {
+            console.error('Error loading users:', error);
+        }
+    }
+
+    function renderUsers(users) {
+        const tbody = document.getElementById('usersTableBody');
+        
+        if (users.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="fas fa-users-slash"></i>
+                        <div class="empty-state-text">No users found</div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = users.map(user => {
+            const initial = user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U';
+            const subscriptionClass = user.has_active_subscription ? 'active' : 'inactive';
+            const subscriptionText = user.has_active_subscription ? 'Premium' : 'Free';
+            const joinDate = new Date(user.date_joined).toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+
+            return `
+                <tr>
+                    <td>
+                        <div class="user-cell">
+                            <div class="user-avatar">${initial}</div>
+                            <div class="user-info">
+                                <div class="user-name">${user.full_name || 'No name'}</div>
+                                <div class="user-email">${user.email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${user.phone_number || 'N/A'}</td>
+                    <td>
+                        <span class="subscription-badge ${subscriptionClass}">
+                            <i class="fas ${user.has_active_subscription ? 'fa-crown' : 'fa-user'}"></i>
+                            ${subscriptionText}
+                        </span>
+                    </td>
+                    <td><span class="band-score">${user.avg_band_score || '0.0'}</span></td>
+                    <td>${user.total_tests_taken}</td>
+                    <td>${joinDate}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn view" onclick="viewUser(${user.id})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn delete" onclick="deleteUser(${user.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function applyFilters() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const subFilter = document.getElementById('subscriptionFilter').value;
+        const sortBy = document.getElementById('sortBy').value;
+
+        let filtered = allUsers.filter(user => {
+            const matchesSearch = !searchTerm || 
+                (user.full_name && user.full_name.toLowerCase().includes(searchTerm)) ||
+                user.email.toLowerCase().includes(searchTerm) ||
+                (user.phone_number && user.phone_number.includes(searchTerm));
+
+            const matchesSub = !subFilter || 
+                (subFilter === 'active' && user.has_active_subscription) ||
+                (subFilter === 'inactive' && !user.has_active_subscription);
+
+            return matchesSearch && matchesSub;
+        });
+
+        if (sortBy === 'band') {
+            filtered.sort((a, b) => (b.avg_band_score || 0) - (a.avg_band_score || 0));
+        } else if (sortBy === 'tests') {
+            filtered.sort((a, b) => b.total_tests_taken - a.total_tests_taken);
+        } else {
+            filtered.sort((a, b) => new Date(b.date_joined) - new Date(a.date_joined));
+        }
+
+        renderUsers(filtered);
+    }
+
+    async function viewUser(userId) {
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/`);
+            const user = await response.json();
+
+            const joinDate = new Date(user.date_joined).toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+            });
+
+            const lastLogin = user.last_login ? new Date(user.last_login).toLocaleString() : 'Never';
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-section-title">Personal Information</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Full Name</div>
+                            <div class="detail-value">${user.full_name || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Email</div>
+                            <div class="detail-value">${user.email}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Phone</div>
+                            <div class="detail-value">${user.phone_number || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Join Date</div>
+                            <div class="detail-value">${joinDate}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Statistics</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Avg Band Score</div>
+                            <div class="detail-value">${user.avg_band_score || '0.0'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Tests Taken</div>
+                            <div class="detail-value">${user.total_tests_taken}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Subscription</div>
+                            <div class="detail-value">${user.has_active_subscription ? 'Premium' : 'Free'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Last Login</div>
+                            <div class="detail-value">${lastLogin}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('userModal').classList.add('show');
+        } catch (error) {
+            console.error('Error loading user details:', error);
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('userModal').classList.remove('show');
+    }
+
+    async function deleteUser(userId) {
+        if (!confirm('Are you sure you want to delete this user?')) return;
+
+        try {
+            await fetch(`/api/admin/users/${userId}/delete/`, { method: 'DELETE' });
+            loadUsers();
+        } catch (error) {
+            console.error('Error deleting user:', error);
+        }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    loadUsers();
+</script>
+{% endblock %}
