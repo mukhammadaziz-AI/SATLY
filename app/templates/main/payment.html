@@ -384,6 +384,16 @@
                 </div>
             </div>
 
+            {% if messages %}
+            <div style="margin-bottom: 20px;">
+                {% for message in messages %}
+                <div style="padding: 1rem; border-radius: 12px; margin-bottom: 0.5rem; background: {% if message.tags == 'error' %}#fee2e2; color: #991b1b;{% else %}#d1fae5; color: #065f46;{% endif %};">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             <form id="paymentForm" method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="test_id" value="{{ test_id|default:'' }}">

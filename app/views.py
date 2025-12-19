@@ -1089,3 +1089,11 @@ def api_pricing_settings(request):
         settings.subscription_price = data.get('subscription_price')
         settings.save()
         return JsonResponse({'success': True})
+
+
+def error_404(request, exception):
+    return render(request, '404.html', status=404)
+
+
+def error_500(request):
+    return render(request, '500.html', status=500)
