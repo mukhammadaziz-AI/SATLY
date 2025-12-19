@@ -253,13 +253,29 @@ def start_exam(request):
         test_questions = session.test.test_questions
         questions = []
         for i, q in enumerate(test_questions):
+            # Map options from array to fields if needed
+            options_data = q.get('options', [])
+            opt_a = q.get('option_a', '')
+            opt_b = q.get('option_b', '')
+            opt_c = q.get('option_c', '')
+            opt_d = q.get('option_d', '')
+
+            if options_data:
+                for opt in options_data:
+                    label = opt.get('label', '').upper()
+                    if label == 'A': opt_a = opt.get('text', '')
+                    elif label == 'B': opt_b = opt.get('text', '')
+                    elif label == 'C': opt_c = opt.get('text', '')
+                    elif label == 'D': opt_d = opt.get('text', '')
+
             questions.append({
                 'id': i, # Use index as ID for JSON questions
                 'question_text': q.get('question_text', q.get('text', '')),
-                'option_a': q.get('option_a', q.get('a', '')),
-                'option_b': q.get('option_b', q.get('b', '')),
-                'option_c': q.get('option_c', q.get('c', '')),
-                'option_d': q.get('option_d', q.get('d', '')),
+                'option_a': opt_a,
+                'option_b': opt_b,
+                'option_c': opt_c,
+                'option_d': opt_d,
+                'image': q.get('image', None)
             })
         time_remaining = session.test.duration * 60
     else:
@@ -356,6 +372,7 @@ def api_save_answer(request):
                 test_questions = session.test.test_questions
                 if 0 <= question_index < len(test_questions):
                     q_data = test_questions[question_index]
+                    # Check both possible keys for correct answer
                     correct_answer = q_data.get('correct_answer', q_data.get('answer', ''))
                     
                     exam_answer, created = ExamAnswer.objects.update_or_create(

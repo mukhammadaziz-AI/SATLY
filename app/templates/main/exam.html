@@ -473,6 +473,9 @@
     <div class="exam-container">
         <div class="question-card">
             <div class="question-badge" id="questionBadge">Question 1</div>
+            <div id="questionImageContainer" style="margin-bottom: 1.5rem; display: none;">
+                <img id="questionImage" src="" alt="Question Image" style="max-width: 100%; border-radius: 12px; border: 1px solid #e2e8f0;">
+            </div>
             <div class="question-text" id="questionText">Loading question...</div>
             <div class="options" id="optionsContainer"></div>
         </div>
@@ -733,6 +736,16 @@
             document.getElementById('questionBadge').textContent = `Question ${index + 1}`;
             document.getElementById('questionText').textContent = q.question_text;
             document.getElementById('questionCounter').textContent = `Question ${index + 1} of ${examData.questions.length}`;
+            
+            // Handle image display
+            const imgContainer = document.getElementById('questionImageContainer');
+            const imgElement = document.getElementById('questionImage');
+            if (q.image) {
+                imgElement.src = q.image;
+                imgContainer.style.display = 'block';
+            } else {
+                imgContainer.style.display = 'none';
+            }
             
             const container = document.getElementById('optionsContainer');
             container.innerHTML = '';
