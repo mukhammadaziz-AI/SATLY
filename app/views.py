@@ -266,19 +266,20 @@ def start_exam(request):
         # Bank questions logic (remains same)
         if session.current_section == 'english':
             questions = list(Question.objects.filter(
-                category='english',
+                category__iexact='english',
                 module=session.current_module
             ).values('id', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d'))
             time_remaining = 32 * 60
         else:
             questions = list(Question.objects.filter(
-                category='math',
+                category__iexact='math',
                 module=session.current_module
             ).values('id', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d'))
             time_remaining = 35 * 60
         
-        if not questions:
-            questions = generate_sample_questions(session.current_section, session.current_module)
+        # Remove automatic sample generation as it hides admin-added questions
+        # if not questions:
+        #     questions = generate_sample_questions(session.current_section, session.current_module)
     
     existing_answers = ExamAnswer.objects.filter(exam_session=session)
     

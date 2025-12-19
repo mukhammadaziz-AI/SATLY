@@ -384,6 +384,7 @@
                 </div>
             </div>
 
+            {% comment %}
             {% if messages %}
             <div style="margin-bottom: 20px;">
                 {% for message in messages %}
@@ -393,6 +394,7 @@
                 {% endfor %}
             </div>
             {% endif %}
+            {% endcomment %}
 
             <form id="paymentForm" method="POST">
                 {% csrf_token %}
