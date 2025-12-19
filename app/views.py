@@ -16,6 +16,32 @@ import random
 from .models import User, Test, TestResult, DailyStats, Question, ExamSession, ExamAnswer, Payment, PricingSettings
 
 
+def calculate_section_score(correct_count, total_questions):
+    if total_questions == 0:
+        return 200
+    # Simple SAT-like scaling: 200 to 800
+    score = 200 + (correct_count / total_questions) * 600
+    return int(score)
+
+
+def update_user_stats(user, session):
+    user.tests_completed += 1
+    if session.total_score > user.best_score:
+        user.best_score = session.total_score
+    
+    # Calculate time spent in minutes
+    time_mins = session.time_spent // 60
+    user.total_time_spent += time_mins
+    user.save()
+    
+    # Update daily stats
+    today = timezone.now().date()
+    stats, created = DailyStats.objects.get_or_create(date=today)
+    stats.tests_completed += 1
+    stats.save()
+
+
+
 def home_page(request):
     if request.user.is_authenticated:
         return redirect('user_dashboard')
@@ -430,17 +456,16 @@ def api_finish_section(request):
             # Scoring for the CURRENT section (English or Math)
             correct_count = ExamAnswer.objects.filter(
                 exam_session=session,
+                category=session.current_section,
                 is_correct=True
             ).count()
             
-            # Note: We need to filter answers by the current section if they are mixed
-            # However, in grouped tests, English answers come from English Test, Math from Math Test
-            # If we reuse the same ExamSession, we might need a way to distinguish
-            # Let's count all correct answers so far and subtract previous section if needed
-            # Or better: check if we are in English or Math
+            total_questions = len(session.test.test_questions) or 1
+            section_score = calculate_section_score(correct_count, total_questions)
+            
             if session.current_section == 'english':
-                session.english_module1_score = correct_count # Reuse this field for specific test correct count
-                session.english_score = calculate_section_score(correct_count, len(session.test.test_questions) or 1)
+                session.english_module1_score = correct_count
+                session.english_score = section_score
                 
                 # Check if there is a Math version of this test
                 math_test = Test.objects.filter(title=session.test.title, category='math', is_active=True).first()
@@ -449,18 +474,15 @@ def api_finish_section(request):
                     session.save()
                     return JsonResponse({'next_action': 'break'})
             else:
-                # We are in Math section
-                # Subtract English correct count if stored
-                math_correct = correct_count - session.english_module1_score
-                session.math_module1_score = math_correct
-                session.math_score = calculate_section_score(math_correct, len(session.test.test_questions) or 1)
+                # Math section
+                session.math_module1_score = correct_count
+                session.math_score = section_score
             
             session.total_score = session.english_score + session.math_score
             session.status = 'completed'
             session.completed_at = timezone.now()
             session.save()
             
-            # Update user stats
             update_user_stats(request.user, session)
             return JsonResponse({'next_action': 'results'})
         else:
