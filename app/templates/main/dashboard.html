@@ -419,15 +419,35 @@
         <div class="main-content">
             <div class="left-content">
                 <div class="start-test-card">
-                    <h2>Start Your SAT Practice Test</h2>
+                    <h2>Full SAT Practice Test</h2>
                     <p>Complete a full-length SAT exam with real timing. Get your results and certificate instantly.</p>
                     <div class="test-info-row">
                         <div class="test-info-item"><i class="fas fa-book-open"></i> English: 54 questions</div>
                         <div class="test-info-item"><i class="fas fa-calculator"></i> Math: 44 questions</div>
                         <div class="test-info-item"><i class="fas fa-clock"></i> Duration: ~2h 14min</div>
                     </div>
-                    <button id="btnStartExam" class="btn-start"><i class="fas fa-play"></i> Start Exam <i class="fas fa-chevron-right"></i></button>
+                    <button onclick="openPaymentModal()" class="btn-start"><i class="fas fa-play"></i> Start Full Exam <i class="fas fa-chevron-right"></i></button>
                 </div>
+
+                {% if available_tests %}
+                <div class="recent-results" style="margin-bottom: 2rem;">
+                    <h3>Available Specific Tests</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+                        {% for test in available_tests %}
+                        <div class="result-card" onclick="openPaymentModal({{ test.id }}, '{{ test.title }}', '{{ test.duration }}')">
+                            <div class="result-icon" style="background: {% if test.category == 'english' %}#dbeafe{% else %}#d1fae5{% endif %}; color: {% if test.category == 'english' %}var(--primary){% else %}var(--secondary){% endif %};">
+                                <i class="fas {% if test.category == 'english' %}fa-book{% else %}fa-calculator{% endif %}"></i>
+                            </div>
+                            <div class="result-info">
+                                <h4>{{ test.title }}</h4>
+                                <span><i class="fas fa-clock"></i> {{ test.duration }} min • {{ test.questions_count }} Qs</span>
+                            </div>
+                            <div class="result-score" style="font-size: 0.9rem; color: var(--gray);">Start</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
                 
                 <div class="recent-results">
                     <h3>Recent Results</h3>
@@ -564,7 +584,7 @@
                 <button id="btnCancelPayment" style="flex: 1; padding: 1rem; background: white; border: 2px solid #e2e8f0; border-radius: 12px; font-weight: 700; color: var(--gray); cursor: pointer; transition: all 0.3s;">
                     Bekor qilish
                 </button>
-                <a href="{% url 'payment_page' %}" style="flex: 1; padding: 1rem; background: var(--gradient); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s; text-decoration: none; text-align: center; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);">
+                <a id="btnConfirmPayment" href="{% url 'payment_page' %}" style="flex: 1; padding: 1rem; background: var(--gradient); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s; text-decoration: none; text-align: center; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);">
                     To'lov qilish
                 </a>
             </div>
@@ -600,10 +620,22 @@
         });
         
         // Payment Modal
-        document.getElementById('btnStartExam').addEventListener('click', function(e) {
-            e.preventDefault();
-            document.getElementById('paymentModal').style.display = 'flex';
-        });
+        function openPaymentModal(testId = null, testTitle = null, testDuration = null) {
+            const modal = document.getElementById('paymentModal');
+            const confirmBtn = document.getElementById('btnConfirmPayment');
+            const modalTitle = modal.querySelector('h2');
+            const modalDesc = modal.querySelector('p');
+            
+            if (testId) {
+                modalTitle.textContent = `"${testTitle}" testini boshlash uchun to'lov qiling.`;
+                confirmBtn.href = `{% url 'payment_page' %}?test_id=${testId}`;
+            } else {
+                modalTitle.textContent = "To'liq SAT testini boshlash uchun to'lov qiling.";
+                confirmBtn.href = "{% url 'payment_page' %}";
+            }
+            
+            modal.style.display = 'flex';
+        }
         
         document.getElementById('btnCancelPayment').addEventListener('click', function() {
             document.getElementById('paymentModal').style.display = 'none';

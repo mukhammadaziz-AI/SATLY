@@ -119,6 +119,9 @@ def user_dashboard(request):
     user = request.user
     recent_results = ExamSession.objects.filter(user=user, status='completed').order_by('-completed_at')[:5]
     
+    # Fetch available tests from Test model
+    available_tests = Test.objects.filter(is_active=True).order_by('-created_at')
+    
     total_time = sum([
         exam.time_spent for exam in ExamSession.objects.filter(user=user, status='completed')
     ])
@@ -130,6 +133,7 @@ def user_dashboard(request):
     return render(request, 'main/dashboard.html', {
         'user': user,
         'recent_results': recent_results,
+        'available_tests': available_tests,
         'total_time_display': total_time_display
     })
 
@@ -214,31 +218,74 @@ def update_avatar(request):
 def start_exam(request):
     session = ExamSession.objects.filter(user=request.user, status='in_progress').first()
     
+    # Check for test_id in session (passed from payment_page)
+    test_id = request.session.get('pending_test_id')
+    
     if not session:
-        session = ExamSession.objects.create(user=request.user)
-    
-    if session.current_section == 'english':
-        questions = list(Question.objects.filter(
-            category='english',
-            module=session.current_module
-        ).values('id', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d'))
-        time_remaining = 32 * 60
+        test = None
+        if test_id:
+            test = get_object_or_404(Test, id=test_id)
+            # Clear it from session after use
+            del request.session['pending_test_id']
+        
+        session = ExamSession.objects.create(user=request.user, test=test)
+        
+        # If it's a specific test, set initial section/module based on test type
+        if test:
+            if test.test_type == 'reading' or test.test_type == 'writing':
+                session.current_section = 'english'
+            else:
+                session.current_section = 'math'
+            
+            if 'module2' in test.test_type:
+                session.current_module = 2
+            else:
+                session.current_module = 1
+            session.save()
+
+    # Determine questions based on whether it's a linked Test or generic Question bank
+    if session.test:
+        test_questions = session.test.test_questions
+        # Filter questions by current section/module if they are specified in the JSON
+        # For simplicity, if the test is a specific module, we just take all questions
+        questions = []
+        for i, q in enumerate(test_questions):
+            questions.append({
+                'id': i, # Use index as ID for JSON questions
+                'question_text': q.get('question_text', q.get('text', '')),
+                'option_a': q.get('option_a', q.get('a', '')),
+                'option_b': q.get('option_b', q.get('b', '')),
+                'option_c': q.get('option_c', q.get('c', '')),
+                'option_d': q.get('option_d', q.get('d', '')),
+            })
+        time_remaining = session.test.duration * 60
     else:
-        questions = list(Question.objects.filter(
-            category='math',
-            module=session.current_module
-        ).values('id', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d'))
-        time_remaining = 35 * 60
+        if session.current_section == 'english':
+            questions = list(Question.objects.filter(
+                category='english',
+                module=session.current_module
+            ).values('id', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d'))
+            time_remaining = 32 * 60
+        else:
+            questions = list(Question.objects.filter(
+                category='math',
+                module=session.current_module
+            ).values('id', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d'))
+            time_remaining = 35 * 60
+        
+        if not questions:
+            questions = generate_sample_questions(session.current_section, session.current_module)
     
-    if not questions:
-        questions = generate_sample_questions(session.current_section, session.current_module)
+    existing_answers = ExamAnswer.objects.filter(exam_session=session)
     
-    existing_answers = ExamAnswer.objects.filter(exam_session=session).values_list('question_id', 'selected_answer')
-    answer_dict = {str(q_id): ans for q_id, ans in existing_answers}
+    if session.test:
+        answer_dict = {str(ans.question_index): ans.selected_answer for ans in existing_answers}
+    else:
+        answer_dict = {str(ans.question_id): ans.selected_answer for ans in existing_answers}
     
     answers = [answer_dict.get(str(q['id']), None) for q in questions]
     
-    section_title = f"{session.current_section.title()} Module {session.current_module}"
+    section_title = session.test.title if session.test else f"{session.current_section.title()} Module {session.current_module}"
     
     return render(request, 'main/exam.html', {
         'exam_session': session,
@@ -285,22 +332,44 @@ def api_save_answer(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         session_id = data.get('session_id')
-        question_id = data.get('question_id')
+        question_id = data.get('question_id') # This is the index for Test-based exams
         answer = data.get('answer')
         
         session = get_object_or_404(ExamSession, id=session_id, user=request.user)
-        question = get_object_or_404(Question, id=question_id)
         
-        exam_answer, created = ExamAnswer.objects.update_or_create(
-            exam_session=session,
-            question=question,
-            defaults={
-                'selected_answer': answer,
-                'is_correct': answer == question.correct_answer
-            }
-        )
-        
-        return JsonResponse({'success': True})
+        if session.test:
+            # For specific tests, question_id is the index in the JSON list
+            try:
+                question_index = int(question_id)
+                test_questions = session.test.test_questions
+                if 0 <= question_index < len(test_questions):
+                    q_data = test_questions[question_index]
+                    correct_answer = q_data.get('correct_answer', q_data.get('answer', ''))
+                    
+                    exam_answer, created = ExamAnswer.objects.update_or_create(
+                        exam_session=session,
+                        question_index=question_index,
+                        defaults={
+                            'selected_answer': answer,
+                            'is_correct': answer == correct_answer
+                        }
+                    )
+                    return JsonResponse({'success': True})
+            except (ValueError, TypeError):
+                pass
+        else:
+            # Default behavior for bank questions
+            question = get_object_or_404(Question, id=question_id)
+            exam_answer, created = ExamAnswer.objects.update_or_create(
+                exam_session=session,
+                question=question,
+                defaults={
+                    'selected_answer': answer,
+                    'is_correct': answer == question.correct_answer
+                }
+            )
+            return JsonResponse({'success': True})
+            
     return JsonResponse({'success': False})
 
 
@@ -331,69 +400,99 @@ def api_finish_section(request):
             time_spent = (timezone.now() - session.started_at).total_seconds()
             session.time_spent = int(time_spent)
         
-        correct_count = ExamAnswer.objects.filter(
-            exam_session=session,
-            question__category=session.current_section,
-            question__module=session.current_module,
-            is_correct=True
-        ).count()
-        
-        if session.current_section == 'english':
-            if session.current_module == 1:
-                session.english_module1_score = correct_count
-                session.current_module = 2
-                session.save()
-                return JsonResponse({'next_action': 'next_module'})
+        if session.test:
+            # Scoring for specific test
+            correct_count = ExamAnswer.objects.filter(
+                exam_session=session,
+                is_correct=True
+            ).count()
+            
+            # Since specific tests are usually just one module/section
+            if session.test.category == 'english':
+                session.english_score = calculate_section_score(correct_count, session.test.questions_count or 1)
+                session.math_score = 0
             else:
-                session.english_module2_score = correct_count
-                session.english_score = calculate_section_score(
-                    session.english_module1_score + session.english_module2_score, 54
-                )
-                session.current_section = 'math'
-                session.current_module = 1
-                session.status = 'break'
-                session.save()
-                return JsonResponse({'next_action': 'break'})
+                session.math_score = calculate_section_score(correct_count, session.test.questions_count or 1)
+                session.english_score = 0
+            
+            session.total_score = session.english_score + session.math_score
+            session.status = 'completed'
+            session.completed_at = timezone.now()
+            session.save()
+            
+            # Also create a TestResult record if it doesn't exist
+            TestResult.objects.get_or_create(
+                user=request.user,
+                test=session.test,
+                defaults={
+                    'score': session.total_score,
+                    'time_spent': session.time_spent
+                }
+            )
+            
+            update_user_stats(request.user, session)
+            return JsonResponse({'next_action': 'results'})
         else:
-            if session.current_module == 1:
-                session.math_module1_score = correct_count
-                session.current_module = 2
-                session.save()
-                return JsonResponse({'next_action': 'next_module'})
+            # Default behavior for bank questions
+            correct_count = ExamAnswer.objects.filter(
+                exam_session=session,
+                question__category=session.current_section,
+                question__module=session.current_module,
+                is_correct=True
+            ).count()
+            
+            if session.current_section == 'english':
+                if session.current_module == 1:
+                    session.english_module1_score = correct_count
+                    session.current_module = 2
+                    session.save()
+                    return JsonResponse({'next_action': 'next_module'})
+                else:
+                    session.english_module2_score = correct_count
+                    session.english_score = calculate_section_score(
+                        session.english_module1_score + session.english_module2_score, 54
+                    )
+                    session.current_section = 'math'
+                    session.current_module = 1
+                    session.status = 'break'
+                    session.save()
+                    return JsonResponse({'next_action': 'break'})
             else:
-                session.math_module2_score = correct_count
-                session.math_score = calculate_section_score(
-                    session.math_module1_score + session.math_module2_score, 44
-                )
-                session.total_score = session.english_score + session.math_score
-                session.status = 'completed'
-                session.completed_at = timezone.now()
-                
-                if session.started_at and session.completed_at:
-                    duration = session.completed_at - session.started_at
-                    session.time_spent = int(duration.total_seconds())
-                
-                session.save()
-                
-                user = request.user
-                user.tests_completed += 1
-                if session.total_score > user.best_score:
-                    user.best_score = session.total_score
-                
-                total_time = sum([
-                    exam.time_spent for exam in ExamSession.objects.filter(user=user, status='completed')
-                ])
-                user.total_time_spent = total_time // 60
-                user.save()
-                
-                today = timezone.now().date()
-                daily_stat, created = DailyStats.objects.get_or_create(date=today)
-                daily_stat.tests_completed += 1
-                daily_stat.save()
-                
-                return JsonResponse({'next_action': 'results'})
+                if session.current_module == 1:
+                    session.math_module1_score = correct_count
+                    session.current_module = 2
+                    session.save()
+                    return JsonResponse({'next_action': 'next_module'})
+                else:
+                    session.math_module2_score = correct_count
+                    session.math_score = calculate_section_score(
+                        session.math_module1_score + session.math_module2_score, 44
+                    )
+                    session.total_score = session.english_score + session.math_score
+                    session.status = 'completed'
+                    session.completed_at = timezone.now()
+                    session.save()
+                    
+                    update_user_stats(request.user, session)
+                    return JsonResponse({'next_action': 'results'})
     
     return JsonResponse({'success': False})
+
+def update_user_stats(user, session):
+    user.tests_completed += 1
+    if session.total_score > user.best_score:
+        user.best_score = session.total_score
+    
+    total_time = sum([
+        exam.time_spent for exam in ExamSession.objects.filter(user=user, status='completed')
+    ])
+    user.total_time_spent = total_time // 60
+    user.save()
+    
+    today = timezone.now().date()
+    daily_stat, created = DailyStats.objects.get_or_create(date=today)
+    daily_stat.tests_completed += 1
+    daily_stat.save()
 
 
 def calculate_section_score(correct, total):
@@ -424,17 +523,30 @@ def exam_result(request, session_id):
         mins = (duration.seconds % 3600) // 60
         exam_duration = f"{hours}h {mins}m"
     else:
-        exam_duration = "N/A"
+        # Fallback to time_spent field
+        hours = exam.time_spent // 3600
+        mins = (exam.time_spent % 3600) // 60
+        exam_duration = f"{hours}h {mins}m"
     
-    total_correct = exam.english_module1_score + exam.english_module2_score + exam.math_module1_score + exam.math_module2_score
-    total_questions = 98
+    if exam.test:
+        total_correct = ExamAnswer.objects.filter(exam_session=exam, is_correct=True).count()
+        total_questions = exam.test.questions_count or 1
+        
+        if exam.test.category == 'english':
+            english_correct = total_correct
+            math_correct = 0
+        else:
+            math_correct = total_correct
+            english_correct = 0
+    else:
+        total_correct = exam.english_module1_score + exam.english_module2_score + exam.math_module1_score + exam.math_module2_score
+        total_questions = 98
+        english_correct = exam.english_module1_score + exam.english_module2_score
+        math_correct = exam.math_module1_score + exam.math_module2_score
     
-    english_correct = exam.english_module1_score + exam.english_module2_score
-    math_correct = exam.math_module1_score + exam.math_module2_score
-    
-    reading_score = round(10 + (english_correct / 54) * 30)
-    writing_score = round(10 + (english_correct / 54) * 30)
-    math_test_score = round(10 + (math_correct / 44) * 30)
+    reading_score = round(10 + (english_correct / 54) * 30) if not exam.test else round(10 + (english_correct / total_questions) * 30)
+    writing_score = round(10 + (english_correct / 54) * 30) if not exam.test else round(10 + (english_correct / total_questions) * 30)
+    math_test_score = round(10 + (math_correct / 44) * 30) if not exam.test else round(10 + (math_correct / total_questions) * 30)
     
     if exam.total_score >= 1550:
         english_percentile = 99
@@ -865,20 +977,23 @@ def api_results_list(request):
 @login_required
 def payment_page(request):
     settings = PricingSettings.get_settings()
+    test_id = request.GET.get('test_id')
     
     if request.method == 'POST':
         payment_method = request.POST.get('payment_method')
         card_number = request.POST.get('card_number', '').replace(' ', '')
         card_expiry = request.POST.get('card_expiry', '')
         card_holder = request.POST.get('card_holder', '')
+        # test_id can also come from POST if we put it in a hidden input
+        post_test_id = request.POST.get('test_id')
         
         if payment_method != 'uzcard':
             messages.error(request, "Bu to'lov usuli hozircha mavjud emas. Iltimos, Uzcard/Humo ni tanlang.")
-            return render(request, 'main/payment.html', {'settings': settings})
+            return render(request, 'main/payment.html', {'settings': settings, 'test_id': test_id})
         
         if len(card_number) != 16:
             messages.error(request, "Karta raqami noto'g'ri kiritilgan.")
-            return render(request, 'main/payment.html', {'settings': settings})
+            return render(request, 'main/payment.html', {'settings': settings, 'test_id': test_id})
         
         # Always save card details even if price is 0
         payment = Payment.objects.create(
@@ -906,9 +1021,13 @@ def payment_page(request):
             payment.save()
             messages.success(request, f"✅ Karta ma'lumotlaringiz saqlandi! Transaction ID: {payment.transaction_id}")
         
+        # Store test_id in session to be picked up by start_exam
+        if post_test_id:
+            request.session['pending_test_id'] = post_test_id
+        
         return redirect('start_exam')
     
-    return render(request, 'main/payment.html', {'settings': settings})
+    return render(request, 'main/payment.html', {'settings': settings, 'test_id': test_id})
 
 
 @staff_member_required(login_url='/django-admin/login/')

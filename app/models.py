@@ -94,6 +94,7 @@ class ExamSession(models.Model):
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exam_sessions')
+    test = models.ForeignKey('Test', on_delete=models.SET_NULL, null=True, blank=True, related_name='sessions')
     certificate_id = models.CharField(max_length=50, unique=True, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')
     current_section = models.CharField(max_length=20, default='english')
@@ -124,7 +125,8 @@ class ExamSession(models.Model):
 
 class ExamAnswer(models.Model):
     exam_session = models.ForeignKey(ExamSession, on_delete=models.CASCADE, related_name='answers')
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True, blank=True)
+    question_index = models.IntegerField(null=True, blank=True)
     selected_answer = models.CharField(max_length=1, blank=True, null=True)
     is_correct = models.BooleanField(default=False)
     answered_at = models.DateTimeField(auto_now=True)

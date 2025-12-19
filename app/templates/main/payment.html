@@ -386,6 +386,7 @@
 
             <form id="paymentForm" method="POST">
                 {% csrf_token %}
+                <input type="hidden" name="test_id" value="{{ test_id|default:'' }}">
                 <div class="payment-methods">
                     <label class="payment-method active" for="uzcard">
                         <input type="radio" name="payment_method" id="uzcard" value="uzcard" checked>
