@@ -127,13 +127,14 @@ class ExamAnswer(models.Model):
     exam_session = models.ForeignKey(ExamSession, on_delete=models.CASCADE, related_name='answers')
     question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True, blank=True)
     question_index = models.IntegerField(null=True, blank=True)
+    category = models.CharField(max_length=20, default='english') # Added to distinguish English/Math in same session
     selected_answer = models.CharField(max_length=1, blank=True, null=True)
     is_correct = models.BooleanField(default=False)
     answered_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         db_table = 'exam_answers'
-        unique_together = ['exam_session', 'question']
+        unique_together = ['exam_session', 'question', 'question_index', 'category']
     
     def __str__(self):
         return f"{self.exam_session} - Q{self.question.question_number}"

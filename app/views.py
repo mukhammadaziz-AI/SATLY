@@ -232,22 +232,25 @@ def start_exam(request):
         
         # If it's a specific test, set initial section/module based on test type
         if test:
-            if test.test_type == 'reading' or test.test_type == 'writing':
+            # Grouped test logic: Find English version if it exists to start with English
+            grouped_tests = Test.objects.filter(title=test.title, is_active=True)
+            english_test = grouped_tests.filter(category='english').first()
+            math_test = grouped_tests.filter(category='math').first()
+            
+            if english_test:
+                session.test = english_test
                 session.current_section = 'english'
-            else:
+            elif math_test:
+                session.test = math_test
                 session.current_section = 'math'
             
-            if 'module2' in test.test_type:
-                session.current_module = 2
-            else:
-                session.current_module = 1
+            # Use test.duration if it's the only one, or sum them later?
+            # For now, we take the current test's duration
             session.save()
 
     # Determine questions based on whether it's a linked Test or generic Question bank
     if session.test:
         test_questions = session.test.test_questions
-        # Filter questions by current section/module if they are specified in the JSON
-        # For simplicity, if the test is a specific module, we just take all questions
         questions = []
         for i, q in enumerate(test_questions):
             questions.append({
@@ -260,6 +263,7 @@ def start_exam(request):
             })
         time_remaining = session.test.duration * 60
     else:
+        # Bank questions logic (remains same)
         if session.current_section == 'english':
             questions = list(Question.objects.filter(
                 category='english',
@@ -279,13 +283,20 @@ def start_exam(request):
     existing_answers = ExamAnswer.objects.filter(exam_session=session)
     
     if session.test:
-        answer_dict = {str(ans.question_index): ans.selected_answer for ans in existing_answers}
+        # Check if we have answers for the CURRENT test (section)
+        # We need to distinguish between English and Math answers if they are in the same session
+        # Use question_index + section prefix or just question_index?
+        # Let's use question_index but filtered by some logic
+        # Actually, let's just clear answers for the new section if needed, or keep them if they are unique
+        answer_dict = {str(ans.question_index): ans.selected_answer for ans in existing_answers if (ans.question_index is not None)}
     else:
         answer_dict = {str(ans.question_id): ans.selected_answer for ans in existing_answers}
     
-    answers = [answer_dict.get(str(q['id']), None) for q in questions]
+    answers = [answer_dict.get(str(i), None) for i, _ in enumerate(questions)]
     
     section_title = session.test.title if session.test else f"{session.current_section.title()} Module {session.current_module}"
+    if session.test:
+        section_title += f" ({session.test.category.title()})"
     
     return render(request, 'main/exam.html', {
         'exam_session': session,
@@ -349,6 +360,7 @@ def api_save_answer(request):
                     exam_answer, created = ExamAnswer.objects.update_or_create(
                         exam_session=session,
                         question_index=question_index,
+                        category=session.current_section,
                         defaults={
                             'selected_answer': answer,
                             'is_correct': answer == correct_answer
@@ -363,6 +375,7 @@ def api_save_answer(request):
             exam_answer, created = ExamAnswer.objects.update_or_create(
                 exam_session=session,
                 question=question,
+                category=session.current_section,
                 defaults={
                     'selected_answer': answer,
                     'is_correct': answer == question.correct_answer
@@ -395,45 +408,45 @@ def api_finish_section(request):
         session_id = data.get('session_id')
         session = get_object_or_404(ExamSession, id=session_id, user=request.user)
         
-        # Calculate time spent properly
-        if session.started_at:
-            time_spent = (timezone.now() - session.started_at).total_seconds()
-            session.time_spent = int(time_spent)
-        
         if session.test:
-            # Scoring for specific test
+            # Scoring for the CURRENT section (English or Math)
             correct_count = ExamAnswer.objects.filter(
                 exam_session=session,
                 is_correct=True
             ).count()
             
-            # Since specific tests are usually just one module/section
-            if session.test.category == 'english':
-                session.english_score = calculate_section_score(correct_count, session.test.questions_count or 1)
-                session.math_score = 0
+            # Note: We need to filter answers by the current section if they are mixed
+            # However, in grouped tests, English answers come from English Test, Math from Math Test
+            # If we reuse the same ExamSession, we might need a way to distinguish
+            # Let's count all correct answers so far and subtract previous section if needed
+            # Or better: check if we are in English or Math
+            if session.current_section == 'english':
+                session.english_module1_score = correct_count # Reuse this field for specific test correct count
+                session.english_score = calculate_section_score(correct_count, len(session.test.test_questions) or 1)
+                
+                # Check if there is a Math version of this test
+                math_test = Test.objects.filter(title=session.test.title, category='math', is_active=True).first()
+                if math_test:
+                    session.status = 'break'
+                    session.save()
+                    return JsonResponse({'next_action': 'break'})
             else:
-                session.math_score = calculate_section_score(correct_count, session.test.questions_count or 1)
-                session.english_score = 0
+                # We are in Math section
+                # Subtract English correct count if stored
+                math_correct = correct_count - session.english_module1_score
+                session.math_module1_score = math_correct
+                session.math_score = calculate_section_score(math_correct, len(session.test.test_questions) or 1)
             
             session.total_score = session.english_score + session.math_score
             session.status = 'completed'
             session.completed_at = timezone.now()
             session.save()
             
-            # Also create a TestResult record if it doesn't exist
-            TestResult.objects.get_or_create(
-                user=request.user,
-                test=session.test,
-                defaults={
-                    'score': session.total_score,
-                    'time_spent': session.time_spent
-                }
-            )
-            
+            # Update user stats
             update_user_stats(request.user, session)
             return JsonResponse({'next_action': 'results'})
         else:
-            # Default behavior for bank questions
+            # Default behavior for bank questions (unchanged)
             correct_count = ExamAnswer.objects.filter(
                 exam_session=session,
                 question__category=session.current_section,
@@ -478,27 +491,6 @@ def api_finish_section(request):
     
     return JsonResponse({'success': False})
 
-def update_user_stats(user, session):
-    user.tests_completed += 1
-    if session.total_score > user.best_score:
-        user.best_score = session.total_score
-    
-    total_time = sum([
-        exam.time_spent for exam in ExamSession.objects.filter(user=user, status='completed')
-    ])
-    user.total_time_spent = total_time // 60
-    user.save()
-    
-    today = timezone.now().date()
-    daily_stat, created = DailyStats.objects.get_or_create(date=today)
-    daily_stat.tests_completed += 1
-    daily_stat.save()
-
-
-def calculate_section_score(correct, total):
-    percentage = correct / total
-    return int(200 + (percentage * 600))
-
 
 @csrf_exempt
 @login_required
@@ -507,6 +499,14 @@ def api_start_math(request):
         data = json.loads(request.body)
         session_id = data.get('session_id')
         session = get_object_or_404(ExamSession, id=session_id, user=request.user)
+        
+        if session.test and session.current_section == 'english':
+            # Find the Math version of the test
+            math_test = Test.objects.filter(title=session.test.title, category='math', is_active=True).first()
+            if math_test:
+                session.test = math_test
+                session.current_section = 'math'
+        
         session.status = 'in_progress'
         session.save()
         return JsonResponse({'success': True})
@@ -517,37 +517,46 @@ def api_start_math(request):
 def exam_result(request, session_id):
     exam = get_object_or_404(ExamSession, id=session_id, user=request.user, status='completed')
     
+    # Calculate duration
     if exam.completed_at and exam.started_at:
         duration = exam.completed_at - exam.started_at
         hours = duration.seconds // 3600
         mins = (duration.seconds % 3600) // 60
         exam_duration = f"{hours}h {mins}m"
     else:
-        # Fallback to time_spent field
         hours = exam.time_spent // 3600
         mins = (exam.time_spent % 3600) // 60
         exam_duration = f"{hours}h {mins}m"
     
     if exam.test:
-        total_correct = ExamAnswer.objects.filter(exam_session=exam, is_correct=True).count()
-        total_questions = exam.test.questions_count or 1
+        # For specific tests (including grouped ones)
+        # english_module1_score stores English correct count
+        # math_module1_score stores Math correct count
+        english_correct = exam.english_module1_score
+        math_correct = exam.math_module1_score
         
-        if exam.test.category == 'english':
-            english_correct = total_correct
-            math_correct = 0
-        else:
-            math_correct = total_correct
-            english_correct = 0
+        # Determine total questions for each section to calculate "Test Scores" (10-40 scale)
+        # This is a bit tricky since we only have the current test linked
+        # Let's find both tests if grouped
+        grouped_tests = Test.objects.filter(title=exam.test.title)
+        eng_test = grouped_tests.filter(category='english').first()
+        math_test = grouped_tests.filter(category='math').first()
+        
+        eng_total = len(eng_test.test_questions) if eng_test else 1
+        math_total = len(math_test.test_questions) if math_test else 1
     else:
-        total_correct = exam.english_module1_score + exam.english_module2_score + exam.math_module1_score + exam.math_module2_score
-        total_questions = 98
+        # Generic bank exam
         english_correct = exam.english_module1_score + exam.english_module2_score
         math_correct = exam.math_module1_score + exam.math_module2_score
+        eng_total = 54
+        math_total = 44
     
-    reading_score = round(10 + (english_correct / 54) * 30) if not exam.test else round(10 + (english_correct / total_questions) * 30)
-    writing_score = round(10 + (english_correct / 54) * 30) if not exam.test else round(10 + (english_correct / total_questions) * 30)
-    math_test_score = round(10 + (math_correct / 44) * 30) if not exam.test else round(10 + (math_correct / total_questions) * 30)
+    # SAT scale mapping (approximate)
+    reading_score = round(10 + (english_correct / eng_total) * 30)
+    writing_score = round(10 + (english_correct / eng_total) * 30) # Shared for English
+    math_test_score = round(10 + (math_correct / math_total) * 30)
     
+    # Percentiles (approximate)
     if exam.total_score >= 1550:
         english_percentile = 99
         user_percentile = 99
