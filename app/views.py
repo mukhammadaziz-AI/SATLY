@@ -281,7 +281,7 @@ def start_exam(request):
         # If no session and no test_id provided, show test selection list
         if not test_id:
             # Check if user is trying to start a generic full exam without picking a specific one
-            # If they just paid for "Full Exam", we can pick the experimental or most recent one
+            # If they just paid for \"Full Exam\", we can pick the experimental or most recent one
             if has_paid or request.user.subscription == 'premium':
                 latest_test = Test.objects.filter(is_active=True).first()
                 if latest_test:
@@ -289,37 +289,37 @@ def start_exam(request):
             
             if not test_id:
                 all_tests = Test.objects.filter(is_active=True).order_by('-created_at')
-            grouped_tests = {}
-            for test in all_tests:
-                if test.title not in grouped_tests:
-                    grouped_tests[test.title] = {
-                        'title': test.title,
-                        'english': None,
-                        'math': None,
-                        'total_questions': 0,
-                        'total_duration': 0,
-                        'id': test.id,
-                        'category': test.category,
-                        'description': test.description
-                    }
-                if test.category == 'english':
-                    grouped_tests[test.title]['english'] = test
-                    grouped_tests[test.title]['id'] = test.id
-                    grouped_tests[test.title]['category'] = 'english'
-                elif test.category == 'math':
-                    grouped_tests[test.title]['math'] = test
-                    if not grouped_tests[test.title]['english']:
+                grouped_tests = {}
+                for test in all_tests:
+                    if test.title not in grouped_tests:
+                        grouped_tests[test.title] = {
+                            'title': test.title,
+                            'english': None,
+                            'math': None,
+                            'total_questions': 0,
+                            'total_duration': 0,
+                            'id': test.id,
+                            'category': test.category,
+                            'description': test.description
+                        }
+                    if test.category == 'english':
+                        grouped_tests[test.title]['english'] = test
                         grouped_tests[test.title]['id'] = test.id
-                        grouped_tests[test.title]['category'] = 'math'
+                        grouped_tests[test.title]['category'] = 'english'
+                    elif test.category == 'math':
+                        grouped_tests[test.title]['math'] = test
+                        if not grouped_tests[test.title]['english']:
+                            grouped_tests[test.title]['id'] = test.id
+                            grouped_tests[test.title]['category'] = 'math'
+                    
+                    grouped_tests[test.title]['total_questions'] += test.questions_count
+                    grouped_tests[test.title]['total_duration'] += test.duration
                 
-                grouped_tests[test.title]['total_questions'] += test.questions_count
-                grouped_tests[test.title]['total_duration'] += test.duration
-            
-            return render(request, 'main/exam.html', {
-                'is_selection_mode': True, 
-                'available_tests': grouped_tests.values(),
-                'has_paid': has_paid
-            })
+                return render(request, 'main/exam.html', {
+                    'is_selection_mode': True, 
+                    'available_tests': grouped_tests.values(),
+                    'has_paid': has_paid
+                })
         
         # Clear payment flags once we start creating a session
         if 'pending_test_id' in request.session:
