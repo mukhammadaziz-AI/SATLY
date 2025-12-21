@@ -275,10 +275,13 @@ def start_exam(request):
     
     # Check for test_id in session (passed from payment_page) or from GET
     test_id = request.session.get('pending_test_id') or request.GET.get('test_id')
+    has_paid = request.session.get('has_paid_for_attempt', False)
     
     if not session:
         # If no session and no test_id provided, show test selection list
-        if not test_id and not request.GET.get('force_generic'):
+        # OR if they have paid and arrived here, show the list but let them start any
+        force_generic = request.GET.get('force_generic')
+        if not test_id and not force_generic:
             all_tests = Test.objects.filter(is_active=True).order_by('-created_at')
             grouped_tests = {}
             for test in all_tests:
@@ -306,20 +309,26 @@ def start_exam(request):
                 grouped_tests[test.title]['total_questions'] += test.questions_count
                 grouped_tests[test.title]['total_duration'] += test.duration
             
-            return render(request, 'main/test_list.html', {'available_tests': grouped_tests.values()})
+            return render(request, 'main/exam.html', {
+                'is_selection_mode': True, 
+                'available_tests': grouped_tests.values(),
+                'has_paid': has_paid
+            })
         
+        # Clear payment flags once we start creating a session
+        if 'pending_test_id' in request.session:
+            del request.session['pending_test_id']
+        if 'has_paid_for_attempt' in request.session:
+            del request.session['has_paid_for_attempt']
+            
         test = None
         if test_id:
             test = get_object_or_404(Test, id=test_id)
-            # Clear it from session after use
-            if 'pending_test_id' in request.session:
-                del request.session['pending_test_id']
         
         session = ExamSession.objects.create(user=request.user, test=test)
         
-        # If it's a specific test, set initial section/module based on test type
+        # Grouped test logic: Find English version if it exists to start with English
         if test:
-            # Grouped test logic: Find English version if it exists to start with English
             grouped_tests = Test.objects.filter(title=test.title, is_active=True)
             english_test = grouped_tests.filter(category='english').first()
             math_test = grouped_tests.filter(category='math').first()
@@ -330,8 +339,8 @@ def start_exam(request):
             elif math_test:
                 session.test = math_test
                 session.current_section = 'math'
-            
-            session.save()
+        
+        session.save()
 
     # Determine questions based on whether it's a linked Test or generic Question bank
     if session.test:
@@ -1146,6 +1155,9 @@ def payment_page(request):
         # Store test_id in session to be picked up by start_exam
         if post_test_id:
             request.session['pending_test_id'] = post_test_id
+        else:
+            # If no specific test_id, mark that they paid for a generic/any test attempt
+            request.session['has_paid_for_attempt'] = True
         
         return redirect('start_exam')
     
