@@ -242,17 +242,24 @@ def update_avatar(request):
 
 @login_required
 def start_exam(request):
+    # Check if a session is already in progress
     session = ExamSession.objects.filter(user=request.user, status='in_progress').first()
     
-    # Check for test_id in session (passed from payment_page)
-    test_id = request.session.get('pending_test_id')
+    # Check for test_id in session (passed from payment_page) or from GET
+    test_id = request.session.get('pending_test_id') or request.GET.get('test_id')
     
     if not session:
+        # If no session and no test_id provided, show test selection list
+        if not test_id and not request.GET.get('force_generic'):
+            available_tests = Test.objects.filter(is_active=True).order_by('-created_at')
+            return render(request, 'main/test_list.html', {'available_tests': available_tests})
+        
         test = None
         if test_id:
             test = get_object_or_404(Test, id=test_id)
             # Clear it from session after use
-            del request.session['pending_test_id']
+            if 'pending_test_id' in request.session:
+                del request.session['pending_test_id']
         
         session = ExamSession.objects.create(user=request.user, test=test)
         
@@ -270,8 +277,6 @@ def start_exam(request):
                 session.test = math_test
                 session.current_section = 'math'
             
-            # Use test.duration if it's the only one, or sum them later?
-            # For now, we take the current test's duration
             session.save()
 
     # Determine questions based on whether it's a linked Test or generic Question bank
@@ -1027,6 +1032,10 @@ def api_results_list(request):
     return JsonResponse({'data': data})
 
 
+# Payment configuration placeholders
+CLICK_API_KEY = "PLACEHOLDER_CLICK_KEY"
+PAYME_API_KEY = "PLACEHOLDER_PAYME_KEY"
+
 @login_required
 def payment_page(request):
     settings = PricingSettings.get_settings()
@@ -1034,45 +1043,51 @@ def payment_page(request):
     
     if request.method == 'POST':
         payment_method = request.POST.get('payment_method')
-        card_number = request.POST.get('card_number', '').replace(' ', '')
-        card_expiry = request.POST.get('card_expiry', '')
-        card_holder = request.POST.get('card_holder', '')
-        # test_id can also come from POST if we put it in a hidden input
         post_test_id = request.POST.get('test_id')
         
-        if payment_method != 'uzcard':
-            messages.error(request, "Bu to'lov usuli hozircha mavjud emas. Iltimos, Uzcard/Humo ni tanlang.")
-            return render(request, 'main/payment.html', {'settings': settings, 'test_id': test_id})
-        
-        if len(card_number) != 16:
-            messages.error(request, "Karta raqami noto'g'ri kiritilgan.")
-            return render(request, 'main/payment.html', {'settings': settings, 'test_id': test_id})
-        
-        # Always save card details even if price is 0
+        # Initialize payment object
         payment = Payment.objects.create(
             user=request.user,
             payment_method=payment_method,
             amount=settings.exam_price,
             status='processing' if float(settings.exam_price) > 0 else 'completed',
-            card_number=card_number[-4:],
-            card_expiry=card_expiry,
             payment_type='exam'
         )
+
+        if payment_method == 'uzcard':
+            card_number = request.POST.get('card_number', '').replace(' ', '')
+            card_expiry = request.POST.get('card_expiry', '')
+            
+            if len(card_number) != 16:
+                messages.error(request, "Karta raqami noto'g'ri kiritilgan.")
+                return render(request, 'main/payment.html', {'settings': settings, 'test_id': test_id})
+            
+            payment.card_number = card_number[-4:]
+            payment.card_expiry = card_expiry
+            payment.save()
+            
+            # Processing Uzcard/Humo simulation
+            if float(settings.exam_price) > 0:
+                import time
+                time.sleep(2)
+            
+        elif payment_method == 'click':
+            # CLICK Integration Placeholder
+            # Use CLICK_API_KEY to process payment via API
+            # For now, simulate success
+            pass
+            
+        elif payment_method == 'payme':
+            # PAYME Integration Placeholder
+            # Use PAYME_API_KEY to process payment via API
+            # For now, simulate success
+            pass
+            
+        payment.status = 'completed'
+        payment.completed_at = timezone.now()
+        payment.save()
         
-        # Process payment only if amount > 0
-        if float(settings.exam_price) > 0:
-            import time
-            time.sleep(2)
-            
-            payment.status = 'completed'
-            payment.completed_at = timezone.now()
-            payment.save()
-            
-            messages.success(request, f"✅ To'lovni muvaffaqiyatli amalga oshirdingiz! Transaction ID: {payment.transaction_id}")
-        else:
-            payment.completed_at = timezone.now()
-            payment.save()
-            messages.success(request, f"✅ Karta ma'lumotlaringiz saqlandi! Transaction ID: {payment.transaction_id}")
+        messages.success(request, f"✅ To'lovni muvaffaqiyatli amalga oshirdingiz! Transaction ID: {payment.transaction_id}")
         
         # Store test_id in session to be picked up by start_exam
         if post_test_id:

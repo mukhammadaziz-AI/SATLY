@@ -1,0 +1,271 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Tests - SATLY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --light: #f8fafc;
+            --gradient: linear-gradient(135deg, #2563eb 0%, #10b981 100%);
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+        }
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            text-decoration: none;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+        .header p {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        .test-card {
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+        .test-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1);
+        }
+        .test-badge {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .test-badge.english { background: #dbeafe; color: var(--primary); }
+        .test-badge.math { background: #d1fae5; color: var(--secondary); }
+        .test-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .test-icon.english { background: #eff6ff; color: var(--primary); }
+        .test-icon.math { background: #ecfdf5; color: var(--secondary); }
+        .test-card h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+        }
+        .test-card p {
+            color: var(--gray);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        .test-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #f1f5f9;
+        }
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--gray);
+            font-weight: 600;
+        }
+        .meta-item i { color: var(--primary); }
+        .btn-start {
+            width: 100%;
+            padding: 1rem;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .btn-start:hover {
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+        
+        /* Modal Style */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 2.5rem;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">
+            <img src="{% static 'images/satly-logo.png' %}" alt="SATLY" style="height: 45px;">
+        </a>
+        <a href="{% url 'user_dashboard' %}" style="text-decoration: none; color: var(--gray); font-weight: 700;">
+            <i class="fas fa-arrow-left"></i> Dashboard
+        </a>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>Testlar Ro'yxati</h1>
+            <p>Bilimingizni sinash uchun kerakli testni tanlang</p>
+        </div>
+
+        <div class="test-grid">
+            <!-- Full SAT Test -->
+            <div class="test-card" style="grid-column: 1 / -1; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
+                <div class="test-badge" style="background: var(--accent); color: white;">Full Access</div>
+                <div class="test-icon" style="background: white;"><i class="fas fa-graduation-cap" style="color: var(--accent);"></i></div>
+                <h2>To'liq SAT Practice Test</h2>
+                <p>Haqiqiy SAT imtihoni formatidagi 54 ta ingliz tili va 44 ta matematika savollaridan iborat to'liq test.</p>
+                <div class="test-meta">
+                    <div class="meta-item"><i class="fas fa-book"></i> 98 Savol</div>
+                    <div class="meta-item"><i class="fas fa-clock"></i> 134 Daqiqa</div>
+                    <div class="meta-item"><i class="fas fa-award"></i> Sertifikat</div>
+                </div>
+                <button onclick="openPaymentModal()" class="btn-start" style="background: var(--accent);">
+                    Imtihonni Boshlash <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            {% for test in available_tests %}
+            <div class="test-card">
+                <div class="test-badge {{ test.category }}">{{ test.category }}</div>
+                <div class="test-icon {{ test.category }}">
+                    <i class="fas {% if test.category == 'english' %}fa-book{% else %}fa-calculator{% endif %}"></i>
+                </div>
+                <h2>{{ test.title }}</h2>
+                <p>{{ test.description|truncatewords:20|default:"Maxsus tayyorlangan SAT testi orqali bilimingizni sinab ko'ring." }}</p>
+                <div class="test-meta">
+                    <div class="meta-item"><i class="fas fa-list-ol"></i> {{ test.questions_count }} Savol</div>
+                    <div class="meta-item"><i class="fas fa-clock"></i> {{ test.duration }} Min</div>
+                </div>
+                <button onclick="openPaymentModal({{ test.id }}, '{{ test.title }}')" class="btn-start">
+                    Testni Boshlash <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: var(--gray);">
+                <i class="fas fa-folder-open" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                <p>Hozircha qo'shimcha testlar mavjud emas.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Payment Modal (Duplicated for simplicity or imported if was separate) -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">💳</div>
+            <h2 id="modalTitle" style="margin-bottom: 1rem;">Testni boshlash uchun to'lov qiling</h2>
+            <p style="color: var(--gray); margin-bottom: 2rem;">Mazkur testni boshlash uchun 19,999 so'm to'lov amalga oshirishingiz kerak.</p>
+            <div style="display: flex; gap: 1rem;">
+                <button onclick="document.getElementById('paymentModal').style.display='none'" style="flex: 1; padding: 1rem; border-radius: 12px; border: 2px solid #e2e8f0; background: white; cursor: pointer; font-weight: 700;">Bekor qilish</button>
+                <a id="btnConfirmPayment" href="{% url 'payment_page' %}" style="flex: 1; padding: 1rem; border-radius: 12px; background: var(--gradient); color: white; text-decoration: none; font-weight: 700; display: flex; align-items: center; justify-content: center;">To'lov qilish</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openPaymentModal(testId = null, testTitle = null) {
+            const modal = document.getElementById('paymentModal');
+            const confirmBtn = document.getElementById('btnConfirmPayment');
+            const modalTitle = document.getElementById('modalTitle');
+            
+            if (testId) {
+                modalTitle.textContent = `"${testTitle}" testini boshlash uchun to'lov qiling`;
+                confirmBtn.href = `{% url 'payment_page' %}?test_id=${testId}`;
+            } else {
+                modalTitle.textContent = "To'liq SAT testini boshlash uchun to'lov qiling";
+                confirmBtn.href = "{% url 'payment_page' %}";
+            }
+            
+            modal.style.display = 'flex';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('paymentModal')) {
+                document.getElementById('paymentModal').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

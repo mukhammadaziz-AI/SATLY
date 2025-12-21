@@ -1,10 +1,12 @@
 from django.urls import path, include
+from django.shortcuts import redirect
 from django.conf import settings
 from django.conf.urls.static import static
 from app.custom_admin import satly_admin_site
 
 urlpatterns = [
     path('django-admin/', satly_admin_site.urls),
+    path('admin/', lambda r: redirect('/django-admin/', permanent=True)),
     path('accounts/', include('allauth.urls')),
     path('', include('app.urls')),
 ]

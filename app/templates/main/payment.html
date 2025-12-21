@@ -415,7 +415,6 @@
                             <img src="{% static 'images/click.png' %}" alt="Click" style="height: 40px; width: auto;">
                         </div>
                         <span class="payment-label">Click</span>
-                        <span class="coming-soon">Tez orada</span>
                     </label>
 
                     <label class="payment-method" for="payme">
@@ -424,7 +423,6 @@
                             <img src="{% static 'images/payme.png' %}" alt="Payme" style="height: 40px; width: auto;">
                         </div>
                         <span class="payment-label">Payme</span>
-                        <span class="coming-soon">Tez orada</span>
                     </label>
                 </div>
 
@@ -572,12 +570,11 @@
                 
                 if (this.value === 'uzcard') {
                     cardForm.classList.add('active');
-                    payBtn.disabled = false;
                 } else {
                     cardForm.classList.remove('active');
-                    payBtn.disabled = true;
-                    payBtn.innerHTML = '<i class="fas fa-clock"></i> Tez orada mavjud bo\'ladi';
                 }
+                payBtn.disabled = false;
+                payBtn.innerHTML = 'To\'lovni amalga oshirish';
             });
         });
 
@@ -587,28 +584,25 @@
             
             const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
             
-            if (paymentMethod !== 'uzcard') {
-                alert('Bu to\'lov usuli hozircha mavjud emas. Iltimos, Uzcard/Humo ni tanlang.');
-                return;
-            }
-            
-            const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
-            const cardExpiry = document.getElementById('cardExpiry').value;
-            const cardHolder = document.getElementById('cardHolder').value;
-            
-            if (cardNumber.length !== 16) {
-                alert('Karta raqami 16 raqamdan iborat bo\'lishi kerak');
-                return;
-            }
-            
-            if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
-                alert('Amal qilish muddati MM/YY formatida bo\'lishi kerak');
-                return;
-            }
-            
-            if (cardHolder.length < 3) {
-                alert('Karta egasining ismini to\'liq kiriting');
-                return;
+            if (paymentMethod === 'uzcard') {
+                const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+                const cardExpiry = document.getElementById('cardExpiry').value;
+                const cardHolder = document.getElementById('cardHolder').value;
+                
+                if (cardNumber.length !== 16) {
+                    alert('Karta raqami 16 raqamdan iborat bo\'lishi kerak');
+                    return;
+                }
+                
+                if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
+                    alert('Amal qilish muddati MM/YY formatida bo\'lishi kerak');
+                    return;
+                }
+                
+                if (cardHolder.length < 3) {
+                    alert('Karta egasining ismini to\'liq kiriting');
+                    return;
+                }
             }
             
             this.submit();
