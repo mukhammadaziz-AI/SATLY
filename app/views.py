@@ -569,15 +569,32 @@ def api_start_math(request):
         session_id = data.get('session_id')
         session = get_object_or_404(ExamSession, id=session_id, user=request.user)
         
+        session.current_section = 'math'
+        session.current_module = 1
+        
         if session.test:
-            # Find the Math Module 1 test with the same title
-            math_test = Test.objects.filter(title=session.test.title, test_type='math_module1', is_active=True).first()
+            # Find the Math Module 1 test with the same title or a related title
+            # In grouped tests, they usually have the exact same title across all 4 modules
+            math_test = Test.objects.filter(
+                title=session.test.title, 
+                test_type='math_module1', 
+                is_active=True
+            ).first()
+            
+            if not math_test:
+                # Fallback: look for a title that contains the base name
+                base_title = session.test.title.replace(' - Reading', '').replace(' - Writing', '').strip()
+                math_test = Test.objects.filter(
+                    title__icontains=base_title,
+                    test_type='math_module1',
+                    is_active=True
+                ).first()
+                
             if math_test:
                 session.test = math_test
-                session.current_section = 'math'
-        else:
-            session.current_section = 'math'
-            session.current_module = 1
+            else:
+                # If no specific math test found, we fall back to bank questions for this section
+                session.test = None
         
         session.status = 'in_progress'
         session.save()
