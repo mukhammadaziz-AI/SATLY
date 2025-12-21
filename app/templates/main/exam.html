@@ -669,7 +669,8 @@
             questions: {{ questions|safe }},
             answers: {{ answers|safe }},
             timeRemaining: {{ time_remaining }},
-            csrfToken: '{{ csrf_token }}'
+            csrfToken: '{{ csrf_token }}',
+            showBreak: {% if show_break %}true{% else %}false{% endif %}
         };
 
         let currentQuestion = 0;
@@ -677,6 +678,10 @@
         let timeLeft = examData.timeRemaining;
 
         function init() {
+            if (examData.showBreak) {
+                showBreak();
+                return;
+            }
             renderQuestionGrid();
             setLayout();
             loadQuestion(currentQuestion);
@@ -854,10 +859,11 @@
         }
 
         async function saveTime() {
+            const timeSpent = examData.timeRemaining - timeLeft;
             fetch('/api/exam/save-time/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': examData.csrfToken },
-                body: JSON.stringify({ session_id: examData.sessionId, time_remaining: timeLeft })
+                body: JSON.stringify({ session_id: examData.sessionId, time_spent: timeSpent })
             });
         }
 

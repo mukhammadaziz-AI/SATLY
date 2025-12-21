@@ -303,10 +303,27 @@
                         <h2>Ready for a full SAT exam?</h2>
                         <p>Simulate the real test experience with our full-length practice sessions.</p>
                     </div>
-                    <a href="{% url 'start_exam' %}" class="btn-start">
-                        <i class="fas fa-play"></i> Start Full Exam
-                    </a>
-                </div>
+                          <a href="javascript:void(0)" onclick="confirmStart('{% url 'start_exam' %}')" class="btn-start">
+                          <i class="fas fa-play"></i> Start Full Exam
+                      </a>
+                  </div>
+
+                  <!-- Start Modal -->
+                  <div id="startModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                      <div style="background: white; padding: 2.5rem; border-radius: 24px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                          <div style="width: 70px; height: 70px; background: #fee2e2; color: #dc2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem;">
+                              <i class="fas fa-lock"></i>
+                          </div>
+                          <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem;">To'lov kutilmoqda</h2>
+                          <p style="color: var(--gray); line-height: 1.6; margin-bottom: 2rem;">Testni boshlash uchun siz to'lov qilishingiz kerak. To'lovdan so'ng barcha SAT mashqlari va sertifikatga ega bo'lasiz.</p>
+                          <div style="display: flex; gap: 1rem;">
+                              <button onclick="closeStartModal()" style="flex: 1; padding: 1rem; border-radius: 12px; border: 2px solid #e2e8f0; background: transparent; font-weight: 700; cursor: pointer;">Bekor qilish</button>
+                              <a id="paymentLink" href="{% url 'payment_page' %}" style="flex: 1; padding: 1rem; border-radius: 12px; background: var(--gradient); color: white; text-decoration: none; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);">
+                                  To'lov qilish <i class="fas fa-arrow-right"></i>
+                              </a>
+                          </div>
+                      </div>
+                  </div>
 
                 {% if available_tests %}
                 <div class="section-header">
@@ -315,7 +332,7 @@
                 </div>
                 <div class="test-grid-small">
                     {% for test in available_tests|slice:":4" %}
-                    <a href="{% url 'payment_page' %}?test_id={{ test.id }}" class="compact-test-card">
+                    <a href="javascript:void(0)" onclick="confirmStart('{% url 'payment_page' %}?test_id={{ test.id }}', true)" class="compact-test-card">
                         <div class="compact-icon" style="background: {% if test.category == 'english' %}#eff6ff{% else %}#ecfdf5{% endif %}; color: {% if test.category == 'english' %}var(--primary){% else %}var(--secondary){% endif %};">
                             <i class="fas {% if test.category == 'english' %}fa-book{% else %}fa-calculator{% endif %}"></i>
                         </div>
@@ -394,6 +411,24 @@
     </form>
 
     <script>
+        function confirmStart(url, isTest = false) {
+            const modal = document.getElementById('startModal');
+            const link = document.getElementById('paymentLink');
+            
+            // In a real app, we'd check if user is already Premium or has paid
+            {% if user.subscription == 'premium' %}
+                window.location.href = url;
+                return;
+            {% endif %}
+
+            link.href = isTest ? url : "{% url 'payment_page' %}";
+            modal.style.display = 'flex';
+        }
+
+        function closeStartModal() {
+            document.getElementById('startModal').style.display = 'none';
+        }
+
         document.getElementById('avatarInput').addEventListener('change', () => document.getElementById('avatarForm').submit());
         // Simple Help Center alert
         document.getElementById('helpCenterBtn').onclick = (e) => {

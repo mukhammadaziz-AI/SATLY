@@ -279,9 +279,16 @@ def start_exam(request):
     
     if not session:
         # If no session and no test_id provided, show test selection list
-        # OR if they have paid and arrived here, show the list but let them start any
         if not test_id:
-            all_tests = Test.objects.filter(is_active=True).order_by('-created_at')
+            # Check if user is trying to start a generic full exam without picking a specific one
+            # If they just paid for "Full Exam", we can pick the experimental or most recent one
+            if has_paid or request.user.subscription == 'premium':
+                latest_test = Test.objects.filter(is_active=True).first()
+                if latest_test:
+                    test_id = latest_test.id
+            
+            if not test_id:
+                all_tests = Test.objects.filter(is_active=True).order_by('-created_at')
             grouped_tests = {}
             for test in all_tests:
                 if test.title not in grouped_tests:
@@ -413,7 +420,8 @@ def start_exam(request):
         'questions': json.dumps(questions),
         'answers': json.dumps(answers),
         'time_remaining': time_remaining,
-        'section_title': section_title
+        'section_title': section_title,
+        'show_break': session.status == 'break'
     })
 
 
@@ -1149,7 +1157,11 @@ def payment_page(request):
         payment.completed_at = timezone.now()
         payment.save()
         
-        messages.success(request, f"✅ To'lovni muvaffaqiyatli amalga oshirdingiz! Transaction ID: {payment.transaction_id}")
+        # Grant premium status to the user
+        request.user.subscription = 'premium'
+        request.user.save()
+        
+        messages.success(request, f"✅ To'lovni muvaffaqiyatli amalga oshirdingiz! Endi barcha testlardan foydalanishingiz mumkin.")
         
         # Store test_id in session to be picked up by start_exam
         if post_test_id:
