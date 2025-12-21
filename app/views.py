@@ -293,11 +293,13 @@ def start_exam(request):
         test = None
         if test_id:
             test = get_object_or_404(Test, id=test_id)
-            # If they chose a Math test, but it belongs to a full test pair, start with English
-            if test.category == 'math':
-                eng_test = Test.objects.filter(title=test.title, category='english', is_active=True).first()
-                if eng_test:
-                    test = eng_test
+            # If they chose a specific module but it's part of a set, find the first module (Reading)
+            first_test = Test.objects.filter(title=test.title, test_type='reading', is_active=True).first()
+            if first_test:
+                test = first_test
+        else:
+            # If no ID, pick the latest reading test as the "Full Exam" entry point
+            test = Test.objects.filter(test_type='reading', is_active=True).order_by('-created_at').first()
 
         session = ExamSession.objects.create(
             user=request.user, 
@@ -312,12 +314,12 @@ def start_exam(request):
         test_questions = session.test.test_questions
         questions = []
         for i, q in enumerate(test_questions):
-            options_data = q.get('options', [])
             opt_a = q.get('option_a', '')
             opt_b = q.get('option_b', '')
             opt_c = q.get('option_c', '')
             opt_d = q.get('option_d', '')
 
+            options_data = q.get('options', [])
             if options_data:
                 for opt in options_data:
                     label = opt.get('label', '').upper()
@@ -328,7 +330,7 @@ def start_exam(request):
 
             questions.append({
                 'id': i,
-                'question_text': q.get('question_text', q.get('text', '')),
+                'question_text': q.get('text', q.get('question_text', '')),
                 'option_a': opt_a,
                 'option_b': opt_b,
                 'option_c': opt_c,
@@ -337,9 +339,7 @@ def start_exam(request):
             })
         time_remaining = session.test.duration * 60
     else:
-        # Database questions (bank questions)
-        # SAT English: 27 questions, 32 mins
-        # SAT Math: 22 questions, 35 mins
+        # Bank questions
         q_objs = Question.objects.filter(
             category__iexact=session.current_section,
             module=session.current_module
@@ -348,8 +348,8 @@ def start_exam(request):
         questions = list(q_objs.values('id', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d'))
         
         if not questions:
-            # Fallback to sample questions if DB is empty for development
-            questions = generate_sample_questions(session.current_section, session.current_module)
+            messages.error(request, "Savollar topilmadi. Iltimos, keyinroq urinib ko'ring.")
+            return redirect('user_dashboard')
             
         time_remaining = 32 * 60 if session.current_section == 'english' else 35 * 60
 
@@ -362,9 +362,10 @@ def start_exam(request):
     
     answers = [answer_dict.get(str(q.get('id', i)), None) for i, q in enumerate(questions)]
     
-    section_title = session.test.title if session.test else f"{session.current_section.title()} Module {session.current_module}"
     if session.test:
-        section_title += f" ({session.test.category.title()})"
+        section_title = f"{session.test.title} - {get_module_display_name(session.test.test_type)}"
+    else:
+        section_title = f"{session.current_section.title()} Module {session.current_module}"
     
     return render(request, 'main/exam.html', {
         'exam_session': session,
@@ -376,38 +377,19 @@ def start_exam(request):
     })
 
 
-def generate_sample_questions(category, module):
-    questions = []
-    num_questions = 27 if category == 'english' else 22
-    
-    for i in range(1, num_questions + 1):
-        q, created = Question.objects.get_or_create(
-            category=category,
-            module=module,
-            question_number=i,
-            defaults={
-                'question_text': f'Sample {category.title()} Question {i}: Which of the following best describes the main idea?',
-                'option_a': 'The author argues for environmental protection',
-                'option_b': 'The passage discusses historical events',
-                'option_c': "Technology's impact on society",
-                'option_d': 'Economic development strategies',
-                'correct_answer': random.choice(['A', 'B', 'C', 'D'])
-            }
-        )
-        questions.append({
-            'id': q.id,
-            'question_text': q.question_text,
-            'option_a': q.option_a,
-            'option_b': q.option_b,
-            'option_c': q.option_c,
-            'option_d': q.option_d
-        })
-    
-    return questions
+def get_module_display_name(test_type):
+    names = {
+        'reading': 'Reading (Module 1)',
+        'writing': 'Writing (Module 2)',
+        'math_module1': 'Math (Module 1)',
+        'math_module2': 'Math (Module 2)'
+    }
+    return names.get(test_type, test_type)
 
 
 @csrf_exempt
 @login_required
+
 def api_save_answer(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -478,48 +460,70 @@ def api_finish_section(request):
         session_id = data.get('session_id')
         session = get_object_or_404(ExamSession, id=session_id, user=request.user)
         
+        # Scoring for the CURRENT module
+        correct_count = ExamAnswer.objects.filter(
+            exam_session=session,
+            category=session.current_section,
+            is_correct=True
+        ).count()
+        
         if session.test:
-            # Scoring for the CURRENT section (English or Math)
-            correct_count = ExamAnswer.objects.filter(
-                exam_session=session,
-                category=session.current_section,
-                is_correct=True
-            ).count()
+            # Handle flow based on Test type
+            current_type = session.test.test_type
             
-            total_questions = len(session.test.test_questions) or 1
-            section_score = calculate_section_score(correct_count, total_questions)
-            
-            if session.current_section == 'english':
+            # Save correct count to the appropriate module field
+            if current_type == 'reading':
                 session.english_module1_score = correct_count
-                session.english_score = section_score
-                
-                # Check if there is a Math version of this test
-                math_test = Test.objects.filter(title=session.test.title, category='math', is_active=True).first()
-                if math_test:
+                # Move to Writing (Module 2)
+                next_test = Test.objects.filter(title=session.test.title, test_type='writing', is_active=True).first()
+                if next_test:
+                    session.test = next_test
+                    session.save()
+                    return JsonResponse({'next_action': 'next_module'})
+                else:
+                    # If no writing module, skip to break
+                    session.english_score = calculate_section_score(session.english_module1_score, 27)
                     session.status = 'break'
                     session.save()
                     return JsonResponse({'next_action': 'break'})
-            else:
-                # Math section
+                    
+            elif current_type == 'writing':
+                session.english_module2_score = correct_count
+                session.english_score = calculate_section_score(session.english_module1_score + session.english_module2_score, 54)
+                session.current_section = 'math'
+                session.status = 'break'
+                session.save()
+                return JsonResponse({'next_action': 'break'})
+                
+            elif current_type == 'math_module1':
                 session.math_module1_score = correct_count
-                session.math_score = section_score
-            
-            session.total_score = session.english_score + session.math_score
-            session.status = 'completed'
-            session.completed_at = timezone.now()
-            session.save()
-            
-            update_user_stats(request.user, session)
-            return JsonResponse({'next_action': 'results'})
+                # Move to Math Module 2
+                next_test = Test.objects.filter(title=session.test.title, test_type='math_module2', is_active=True).first()
+                if next_test:
+                    session.test = next_test
+                    session.save()
+                    return JsonResponse({'next_action': 'next_module'})
+                else:
+                    # If no module 2, finish
+                    session.math_score = calculate_section_score(session.math_module1_score, 22)
+                    session.total_score = session.english_score + session.math_score
+                    session.status = 'completed'
+                    session.completed_at = timezone.now()
+                    session.save()
+                    update_user_stats(request.user, session)
+                    return JsonResponse({'next_action': 'results'})
+                    
+            elif current_type == 'math_module2':
+                session.math_module2_score = correct_count
+                session.math_score = calculate_section_score(session.math_module1_score + session.math_module2_score, 44)
+                session.total_score = session.english_score + session.math_score
+                session.status = 'completed'
+                session.completed_at = timezone.now()
+                session.save()
+                update_user_stats(request.user, session)
+                return JsonResponse({'next_action': 'results'})
         else:
-            # Default behavior for bank questions (unchanged)
-            correct_count = ExamAnswer.objects.filter(
-                exam_session=session,
-                question__category=session.current_section,
-                question__module=session.current_module,
-                is_correct=True
-            ).count()
-            
+            # Bank questions flow (unchanged)
             if session.current_section == 'english':
                 if session.current_module == 1:
                     session.english_module1_score = correct_count
@@ -551,10 +555,9 @@ def api_finish_section(request):
                     session.status = 'completed'
                     session.completed_at = timezone.now()
                     session.save()
-                    
                     update_user_stats(request.user, session)
                     return JsonResponse({'next_action': 'results'})
-    
+      
     return JsonResponse({'success': False})
 
 
@@ -566,17 +569,21 @@ def api_start_math(request):
         session_id = data.get('session_id')
         session = get_object_or_404(ExamSession, id=session_id, user=request.user)
         
-        if session.test and session.current_section == 'english':
-            # Find the Math version of the test
-            math_test = Test.objects.filter(title=session.test.title, category='math', is_active=True).first()
+        if session.test:
+            # Find the Math Module 1 test with the same title
+            math_test = Test.objects.filter(title=session.test.title, test_type='math_module1', is_active=True).first()
             if math_test:
                 session.test = math_test
                 session.current_section = 'math'
+        else:
+            session.current_section = 'math'
+            session.current_module = 1
         
         session.status = 'in_progress'
         session.save()
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
+
 
 
 @login_required
