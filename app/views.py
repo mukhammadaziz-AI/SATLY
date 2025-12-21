@@ -454,6 +454,34 @@ def api_save_time(request):
 
 @csrf_exempt
 @login_required
+def find_next_test(current_test, next_type):
+    if not current_test:
+        return None
+        
+    # 1. Try exact title match
+    next_test = Test.objects.filter(
+        title=current_test.title,
+        test_type=next_type,
+        is_active=True
+    ).first()
+    
+    if next_test:
+        return next_test
+        
+    # 2. Try partial match by removing common suffixes
+    base_title = current_test.title.replace(' - Reading', '').replace(' - Writing', '').replace(' - Math', '').replace(' - Module 1', '').replace(' - Module 2', '').strip()
+    
+    next_test = Test.objects.filter(
+        title__icontains=base_title,
+        test_type=next_type,
+        is_active=True
+    ).first()
+    
+    return next_test
+
+
+@csrf_exempt
+@login_required
 def api_finish_section(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -475,7 +503,7 @@ def api_finish_section(request):
             if current_type == 'reading':
                 session.english_module1_score = correct_count
                 # Move to Writing (Module 2)
-                next_test = Test.objects.filter(title=session.test.title, test_type='writing', is_active=True).first()
+                next_test = find_next_test(session.test, 'writing')
                 if next_test:
                     session.test = next_test
                     session.save()
@@ -498,7 +526,7 @@ def api_finish_section(request):
             elif current_type == 'math_module1':
                 session.math_module1_score = correct_count
                 # Move to Math Module 2
-                next_test = Test.objects.filter(title=session.test.title, test_type='math_module2', is_active=True).first()
+                next_test = find_next_test(session.test, 'math_module2')
                 if next_test:
                     session.test = next_test
                     session.save()
@@ -573,27 +601,10 @@ def api_start_math(request):
         session.current_module = 1
         
         if session.test:
-            # Find the Math Module 1 test with the same title or a related title
-            # In grouped tests, they usually have the exact same title across all 4 modules
-            math_test = Test.objects.filter(
-                title=session.test.title, 
-                test_type='math_module1', 
-                is_active=True
-            ).first()
-            
-            if not math_test:
-                # Fallback: look for a title that contains the base name
-                base_title = session.test.title.replace(' - Reading', '').replace(' - Writing', '').strip()
-                math_test = Test.objects.filter(
-                    title__icontains=base_title,
-                    test_type='math_module1',
-                    is_active=True
-                ).first()
-                
+            math_test = find_next_test(session.test, 'math_module1')
             if math_test:
                 session.test = math_test
             else:
-                # If no specific math test found, we fall back to bank questions for this section
                 session.test = None
         
         session.status = 'in_progress'

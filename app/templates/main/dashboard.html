@@ -415,12 +415,6 @@
             const modal = document.getElementById('startModal');
             const link = document.getElementById('paymentLink');
             
-            // In a real app, we'd check if user is already Premium or has paid
-            {% if user.subscription == 'premium' %}
-                window.location.href = url;
-                return;
-            {% endif %}
-
             link.href = isTest ? url : "{% url 'payment_page' %}";
             modal.style.display = 'flex';
         }
