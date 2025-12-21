@@ -280,70 +280,38 @@ def start_exam(request):
     # Check if a session is already in progress
     session = ExamSession.objects.filter(user=request.user, status__in=['in_progress', 'break']).first()
     
-    # Check for test_id in session (passed from payment_page) or from GET
+    # Check for test_id from session or GET
     test_id = request.session.get('pending_test_id') or request.GET.get('test_id')
     
     if not session:
-        # If no session and no test_id provided, show test selection list
-        if not test_id:
-            available_tests_raw = Test.objects.filter(is_active=True).order_by('-created_at')
-            grouped_tests = {}
-            for test in available_tests_raw:
-                if test.title not in grouped_tests:
-                    grouped_tests[test.title] = {
-                        'title': test.title,
-                        'english': None,
-                        'math': None,
-                        'total_questions': 0,
-                        'total_duration': 0,
-                        'id': test.id,
-                        'category': test.category,
-                        'description': test.description
-                    }
-                if test.category == 'english':
-                    grouped_tests[test.title]['english'] = test
-                    grouped_tests[test.title]['id'] = test.id
-                    grouped_tests[test.title]['category'] = 'english'
-                elif test.category == 'math':
-                    grouped_tests[test.title]['math'] = test
-                    if not grouped_tests[test.title]['english']:
-                        grouped_tests[test.title]['id'] = test.id
-                        grouped_tests[test.title]['category'] = 'math'
-                
-                grouped_tests[test.title]['total_questions'] += test.questions_count
-                grouped_tests[test.title]['total_duration'] += test.duration
-            
-            return render(request, 'main/exam.html', {
-                'is_selection_mode': True, 
-                'available_tests': grouped_tests.values(),
-                'has_paid': has_paid
-            })
-        
-        # Clear payment flags once we start creating a session
+        # Clear payment flags once we start
         if 'pending_test_id' in request.session:
             del request.session['pending_test_id']
         if 'has_paid_for_attempt' in request.session:
             del request.session['has_paid_for_attempt']
             
-        test = get_object_or_404(Test, id=test_id)
-        
-        # If they chose a Math test, but it belongs to a full test pair, start with English
-        if test.category == 'math':
-            eng_test = Test.objects.filter(title=test.title, category='english', is_active=True).first()
-            if eng_test:
-                test = eng_test
+        test = None
+        if test_id:
+            test = get_object_or_404(Test, id=test_id)
+            # If they chose a Math test, but it belongs to a full test pair, start with English
+            if test.category == 'math':
+                eng_test = Test.objects.filter(title=test.title, category='english', is_active=True).first()
+                if eng_test:
+                    test = eng_test
 
-        session = ExamSession.objects.create(user=request.user, test=test, current_section=test.category)
+        session = ExamSession.objects.create(
+            user=request.user, 
+            test=test, 
+            current_section='english' if not test else test.category,
+            current_module=1
+        )
         session.save()
     
-    # If session is in break status, redirect to break page (which is handled in exam.html)
-    
-    # Determine questions based on whether it's a linked Test or generic Question bank
+    # Determine questions
     if session.test:
         test_questions = session.test.test_questions
         questions = []
         for i, q in enumerate(test_questions):
-            # Map options from array to fields if needed
             options_data = q.get('options', [])
             opt_a = q.get('option_a', '')
             opt_b = q.get('option_b', '')
@@ -359,7 +327,7 @@ def start_exam(request):
                     elif label == 'D': opt_d = opt.get('text', '')
 
             questions.append({
-                'id': i, # Use index as ID for JSON questions
+                'id': i,
                 'question_text': q.get('question_text', q.get('text', '')),
                 'option_a': opt_a,
                 'option_b': opt_b,
@@ -369,33 +337,30 @@ def start_exam(request):
             })
         time_remaining = session.test.duration * 60
     else:
-        # Bank questions logic
-        if session.current_section == 'english':
-            questions = list(Question.objects.filter(
-                category__iexact='english',
-                module=session.current_module
-            ).values('id', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d'))
-            time_remaining = 32 * 60
-        else:
-            questions = list(Question.objects.filter(
-                category__iexact='math',
-                module=session.current_module
-            ).values('id', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d'))
-            time_remaining = 35 * 60
+        # Database questions (bank questions)
+        # SAT English: 27 questions, 32 mins
+        # SAT Math: 22 questions, 35 mins
+        q_objs = Question.objects.filter(
+            category__iexact=session.current_section,
+            module=session.current_module
+        ).order_by('question_number')
+        
+        questions = list(q_objs.values('id', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d'))
+        
+        if not questions:
+            # Fallback to sample questions if DB is empty for development
+            questions = generate_sample_questions(session.current_section, session.current_module)
+            
+        time_remaining = 32 * 60 if session.current_section == 'english' else 35 * 60
 
-    existing_answers = ExamAnswer.objects.filter(exam_session=session)
+    existing_answers = ExamAnswer.objects.filter(exam_session=session, category=session.current_section)
     
     if session.test:
-        # Check if we have answers for the CURRENT test (section)
-        # We need to distinguish between English and Math answers if they are in the same session
-        # Use question_index + section prefix or just question_index?
-        # Let's use question_index but filtered by some logic
-        # Actually, let's just clear answers for the new section if needed, or keep them if they are unique
         answer_dict = {str(ans.question_index): ans.selected_answer for ans in existing_answers if (ans.question_index is not None)}
     else:
         answer_dict = {str(ans.question_id): ans.selected_answer for ans in existing_answers}
     
-    answers = [answer_dict.get(str(i), None) for i, _ in enumerate(questions)]
+    answers = [answer_dict.get(str(q.get('id', i)), None) for i, q in enumerate(questions)]
     
     section_title = session.test.title if session.test else f"{session.current_section.title()} Module {session.current_module}"
     if session.test:
