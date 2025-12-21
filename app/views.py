@@ -270,22 +270,30 @@ def update_avatar(request):
 
 @login_required
 def start_exam(request):
+    # Enforce payment for non-premium users
+    has_paid = request.session.get('has_paid_for_attempt', False)
+    if request.user.subscription != 'premium' and not has_paid:
+        # Check if there's an active session already - if so, allow it
+        if not ExamSession.objects.filter(user=request.user, status__in=['in_progress', 'break']).exists():
+            return redirect('payment_page')
+
     # Check if a session is already in progress
-    session = ExamSession.objects.filter(user=request.user, status='in_progress').first()
+    session = ExamSession.objects.filter(user=request.user, status__in=['in_progress', 'break']).first()
     
     # Check for test_id in session (passed from payment_page) or from GET
     test_id = request.session.get('pending_test_id') or request.GET.get('test_id')
-    has_paid = request.session.get('has_paid_for_attempt', False)
     
     if not session:
         # If no session and no test_id provided, show test selection list
         if not test_id:
             # Check if user is trying to start a generic full exam without picking a specific one
-            # If they just paid for \"Full Exam\", we can pick the experimental or most recent one
-            if has_paid or request.user.subscription == 'premium':
+            # If they just paid for "Full Exam", we can pick the most recent English test
+            latest_test = Test.objects.filter(is_active=True, category='english').first()
+            if not latest_test:
                 latest_test = Test.objects.filter(is_active=True).first()
-                if latest_test:
-                    test_id = latest_test.id
+            
+            if latest_test:
+                test_id = latest_test.id
             
             if not test_id:
                 all_tests = Test.objects.filter(is_active=True).order_by('-created_at')
@@ -331,23 +339,21 @@ def start_exam(request):
         if test_id:
             test = get_object_or_404(Test, id=test_id)
         
+        # If we pick a Math test but English exists for same title, switch to English for start
+        if test and test.category == 'math':
+            eng_alt = Test.objects.filter(title=test.title, category='english', is_active=True).first()
+            if eng_alt:
+                test = eng_alt
+
         session = ExamSession.objects.create(user=request.user, test=test)
         
-        # Grouped test logic: Find English version if it exists to start with English
         if test:
-            grouped_tests = Test.objects.filter(title=test.title, is_active=True)
-            english_test = grouped_tests.filter(category='english').first()
-            math_test = grouped_tests.filter(category='math').first()
-            
-            if english_test:
-                session.test = english_test
-                session.current_section = 'english'
-            elif math_test:
-                session.test = math_test
-                session.current_section = 'math'
+            session.current_section = test.category # Usually 'english' now
         
         session.save()
-
+    
+    # If session is in break status, redirect to break page (which is handled in exam.html)
+    
     # Determine questions based on whether it's a linked Test or generic Question bank
     if session.test:
         test_questions = session.test.test_questions
@@ -379,7 +385,7 @@ def start_exam(request):
             })
         time_remaining = session.test.duration * 60
     else:
-        # Bank questions logic (remains same)
+        # Bank questions logic
         if session.current_section == 'english':
             questions = list(Question.objects.filter(
                 category__iexact='english',
@@ -392,11 +398,7 @@ def start_exam(request):
                 module=session.current_module
             ).values('id', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d'))
             time_remaining = 35 * 60
-        
-        # Remove automatic sample generation as it hides admin-added questions
-        # if not questions:
-        #     questions = generate_sample_questions(session.current_section, session.current_module)
-    
+
     existing_answers = ExamAnswer.objects.filter(exam_session=session)
     
     if session.test:
