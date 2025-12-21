@@ -286,48 +286,38 @@ def start_exam(request):
     if not session:
         # If no session and no test_id provided, show test selection list
         if not test_id:
-            # Check if user is trying to start a generic full exam without picking a specific one
-            # If they just paid for "Full Exam", we can pick the most recent English test
-            latest_test = Test.objects.filter(is_active=True, category='english').first()
-            if not latest_test:
-                latest_test = Test.objects.filter(is_active=True).first()
-            
-            if latest_test:
-                test_id = latest_test.id
-            
-            if not test_id:
-                all_tests = Test.objects.filter(is_active=True).order_by('-created_at')
-                grouped_tests = {}
-                for test in all_tests:
-                    if test.title not in grouped_tests:
-                        grouped_tests[test.title] = {
-                            'title': test.title,
-                            'english': None,
-                            'math': None,
-                            'total_questions': 0,
-                            'total_duration': 0,
-                            'id': test.id,
-                            'category': test.category,
-                            'description': test.description
-                        }
-                    if test.category == 'english':
-                        grouped_tests[test.title]['english'] = test
+            available_tests_raw = Test.objects.filter(is_active=True).order_by('-created_at')
+            grouped_tests = {}
+            for test in available_tests_raw:
+                if test.title not in grouped_tests:
+                    grouped_tests[test.title] = {
+                        'title': test.title,
+                        'english': None,
+                        'math': None,
+                        'total_questions': 0,
+                        'total_duration': 0,
+                        'id': test.id,
+                        'category': test.category,
+                        'description': test.description
+                    }
+                if test.category == 'english':
+                    grouped_tests[test.title]['english'] = test
+                    grouped_tests[test.title]['id'] = test.id
+                    grouped_tests[test.title]['category'] = 'english'
+                elif test.category == 'math':
+                    grouped_tests[test.title]['math'] = test
+                    if not grouped_tests[test.title]['english']:
                         grouped_tests[test.title]['id'] = test.id
-                        grouped_tests[test.title]['category'] = 'english'
-                    elif test.category == 'math':
-                        grouped_tests[test.title]['math'] = test
-                        if not grouped_tests[test.title]['english']:
-                            grouped_tests[test.title]['id'] = test.id
-                            grouped_tests[test.title]['category'] = 'math'
-                    
-                    grouped_tests[test.title]['total_questions'] += test.questions_count
-                    grouped_tests[test.title]['total_duration'] += test.duration
+                        grouped_tests[test.title]['category'] = 'math'
                 
-                return render(request, 'main/exam.html', {
-                    'is_selection_mode': True, 
-                    'available_tests': grouped_tests.values(),
-                    'has_paid': has_paid
-                })
+                grouped_tests[test.title]['total_questions'] += test.questions_count
+                grouped_tests[test.title]['total_duration'] += test.duration
+            
+            return render(request, 'main/exam.html', {
+                'is_selection_mode': True, 
+                'available_tests': grouped_tests.values(),
+                'has_paid': has_paid
+            })
         
         # Clear payment flags once we start creating a session
         if 'pending_test_id' in request.session:
@@ -335,21 +325,15 @@ def start_exam(request):
         if 'has_paid_for_attempt' in request.session:
             del request.session['has_paid_for_attempt']
             
-        test = None
-        if test_id:
-            test = get_object_or_404(Test, id=test_id)
+        test = get_object_or_404(Test, id=test_id)
         
-        # If we pick a Math test but English exists for same title, switch to English for start
-        if test and test.category == 'math':
-            eng_alt = Test.objects.filter(title=test.title, category='english', is_active=True).first()
-            if eng_alt:
-                test = eng_alt
+        # If they chose a Math test, but it belongs to a full test pair, start with English
+        if test.category == 'math':
+            eng_test = Test.objects.filter(title=test.title, category='english', is_active=True).first()
+            if eng_test:
+                test = eng_test
 
-        session = ExamSession.objects.create(user=request.user, test=test)
-        
-        if test:
-            session.current_section = test.category # Usually 'english' now
-        
+        session = ExamSession.objects.create(user=request.user, test=test, current_section=test.category)
         session.save()
     
     # If session is in break status, redirect to break page (which is handled in exam.html)
