@@ -416,20 +416,19 @@
             </div>
         </div>
         
-        <div class="main-content">
-            <div class="left-content">
-                <div class="start-test-card">
-                    <h2>Full SAT Practice Test</h2>
-                    <p>Complete a full-length SAT exam with real timing. Get your results and certificate instantly.</p>
-                    <div class="test-info-row">
-                        <div class="test-info-item"><i class="fas fa-book-open"></i> English: 54 questions</div>
-                        <div class="test-info-item"><i class="fas fa-calculator"></i> Math: 44 questions</div>
-                        <div class="test-info-item"><i class="fas fa-clock"></i> Duration: ~2h 14min</div>
-                    </div>
-                    <a href="{% url 'payment_page' %}" class="btn-start"><i class="fas fa-play"></i> Start Full Exam <i class="fas fa-chevron-right"></i></a>
-                </div>
-
-                {% if available_tests %}
+          <div class="main-content">
+              <div class="left-content">
+                  <div style="background: white; padding: 1.5rem; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                      <div>
+                          <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.25rem;">Start New SAT Exam</h2>
+                          <p style="color: var(--gray); font-size: 0.95rem;">Choose from specifically prepared tests or take a full practice exam.</p>
+                      </div>
+                      <a href="{% url 'payment_page' %}" class="btn-start" style="padding: 0.75rem 1.5rem; font-size: 1rem;">
+                          <i class="fas fa-play"></i> Start Test
+                      </a>
+                  </div>
+  
+                  {% if available_tests %}
                 <div class="recent-results" style="margin-bottom: 2rem;">
                     <h3>Available Specific Tests</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">

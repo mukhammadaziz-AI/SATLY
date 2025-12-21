@@ -280,8 +280,7 @@ def start_exam(request):
     if not session:
         # If no session and no test_id provided, show test selection list
         # OR if they have paid and arrived here, show the list but let them start any
-        force_generic = request.GET.get('force_generic')
-        if not test_id and not force_generic:
+        if not test_id:
             all_tests = Test.objects.filter(is_active=True).order_by('-created_at')
             grouped_tests = {}
             for test in all_tests:

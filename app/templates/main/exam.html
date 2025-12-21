@@ -517,27 +517,7 @@
         </div>
 
         <div class="test-grid">
-            <!-- Full SAT Test -->
-            <div class="test-card" style="grid-column: 1 / -1; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
-                <div class="test-badge" style="background: var(--accent); color: white;">Full Access</div>
-                <div class="test-icon" style="background: white;"><i class="fas fa-graduation-cap" style="color: var(--accent);"></i></div>
-                <h2>To'liq SAT Practice Test</h2>
-                <p>Haqiqiy SAT imtihoni formatidagi 54 ta ingliz tili va 44 ta matematika savollaridan iborat to'liq test.</p>
-                <div class="test-meta">
-                    <div class="meta-item"><i class="fas fa-book"></i> 98 Savol</div>
-                    <div class="meta-item"><i class="fas fa-clock"></i> 134 Daqiqa</div>
-                    <div class="meta-item"><i class="fas fa-award"></i> Sertifikat</div>
-                </div>
-                {% if has_paid %}
-                <a href="{% url 'start_exam' %}?force_generic=1" class="btn-primary" style="text-decoration: none; padding: 1rem; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: var(--accent);">
-                    Imtihonni Boshlash <i class="fas fa-chevron-right"></i>
-                </a>
-                {% else %}
-                <button onclick="openPaymentModal()" class="btn-primary" style="padding: 1rem; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: var(--accent);">
-                    Imtihonni Boshlash <i class="fas fa-chevron-right"></i>
-                </button>
-                {% endif %}
-            </div>
+
 
             {% for test in available_tests %}
             <div class="test-card">
