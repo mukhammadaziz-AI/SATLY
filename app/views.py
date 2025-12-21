@@ -145,8 +145,36 @@ def user_dashboard(request):
     user = request.user
     recent_results = ExamSession.objects.filter(user=user, status='completed').order_by('-completed_at')[:5]
     
-    # Fetch available tests from Test model
-    available_tests = Test.objects.filter(is_active=True).order_by('-created_at')
+    # Fetch available tests from Test model and group by title
+    all_tests = Test.objects.filter(is_active=True).order_by('-created_at')
+    grouped_tests = {}
+    for test in all_tests:
+        if test.title not in grouped_tests:
+            grouped_tests[test.title] = {
+                'title': test.title,
+                'english': None,
+                'math': None,
+                'total_questions': 0,
+                'total_duration': 0,
+                'id': test.id,
+                'category': test.category, # For styling
+                'description': test.description
+            }
+        
+        if test.category == 'english':
+            grouped_tests[test.title]['english'] = test
+            grouped_tests[test.title]['id'] = test.id
+            grouped_tests[test.title]['category'] = 'english'
+        elif test.category == 'math':
+            grouped_tests[test.title]['math'] = test
+            if not grouped_tests[test.title]['english']:
+                grouped_tests[test.title]['id'] = test.id
+                grouped_tests[test.title]['category'] = 'math'
+        
+        grouped_tests[test.title]['total_questions'] += test.questions_count
+        grouped_tests[test.title]['total_duration'] += test.duration
+    
+    available_tests = grouped_tests.values()
     
     total_time = sum([
         exam.time_spent for exam in ExamSession.objects.filter(user=user, status='completed')
@@ -251,8 +279,34 @@ def start_exam(request):
     if not session:
         # If no session and no test_id provided, show test selection list
         if not test_id and not request.GET.get('force_generic'):
-            available_tests = Test.objects.filter(is_active=True).order_by('-created_at')
-            return render(request, 'main/test_list.html', {'available_tests': available_tests})
+            all_tests = Test.objects.filter(is_active=True).order_by('-created_at')
+            grouped_tests = {}
+            for test in all_tests:
+                if test.title not in grouped_tests:
+                    grouped_tests[test.title] = {
+                        'title': test.title,
+                        'english': None,
+                        'math': None,
+                        'total_questions': 0,
+                        'total_duration': 0,
+                        'id': test.id,
+                        'category': test.category,
+                        'description': test.description
+                    }
+                if test.category == 'english':
+                    grouped_tests[test.title]['english'] = test
+                    grouped_tests[test.title]['id'] = test.id
+                    grouped_tests[test.title]['category'] = 'english'
+                elif test.category == 'math':
+                    grouped_tests[test.title]['math'] = test
+                    if not grouped_tests[test.title]['english']:
+                        grouped_tests[test.title]['id'] = test.id
+                        grouped_tests[test.title]['category'] = 'math'
+                
+                grouped_tests[test.title]['total_questions'] += test.questions_count
+                grouped_tests[test.title]['total_duration'] += test.duration
+            
+            return render(request, 'main/test_list.html', {'available_tests': grouped_tests.values()})
         
         test = None
         if test_id:

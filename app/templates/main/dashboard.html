@@ -434,13 +434,13 @@
                     <h3>Available Specific Tests</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
                         {% for test in available_tests %}
-                        <div class="result-card" onclick="openPaymentModal({{ test.id }}, '{{ test.title }}', '{{ test.duration }}')">
+                        <div class="result-card" onclick="openPaymentModal({{ test.id }}, '{{ test.title }}', '{{ test.total_duration }}')">
                             <div class="result-icon" style="background: {% if test.category == 'english' %}#dbeafe{% else %}#d1fae5{% endif %}; color: {% if test.category == 'english' %}var(--primary){% else %}var(--secondary){% endif %};">
                                 <i class="fas {% if test.category == 'english' %}fa-book{% else %}fa-calculator{% endif %}"></i>
                             </div>
                             <div class="result-info">
                                 <h4>{{ test.title }}</h4>
-                                <span><i class="fas fa-clock"></i> {{ test.duration }} min • {{ test.questions_count }} Qs</span>
+                                <span><i class="fas fa-clock"></i> {{ test.total_duration }} min • {{ test.total_questions }} Qs</span>
                             </div>
                             <div class="result-score" style="font-size: 0.9rem; color: var(--gray);">Start</div>
                         </div>

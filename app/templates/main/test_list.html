@@ -215,8 +215,8 @@
                 <h2>{{ test.title }}</h2>
                 <p>{{ test.description|truncatewords:20|default:"Maxsus tayyorlangan SAT testi orqali bilimingizni sinab ko'ring." }}</p>
                 <div class="test-meta">
-                    <div class="meta-item"><i class="fas fa-list-ol"></i> {{ test.questions_count }} Savol</div>
-                    <div class="meta-item"><i class="fas fa-clock"></i> {{ test.duration }} Min</div>
+                    <div class="meta-item"><i class="fas fa-list-ol"></i> {{ test.total_questions }} Savol</div>
+                    <div class="meta-item"><i class="fas fa-clock"></i> {{ test.total_duration }} Min</div>
                 </div>
                 <button onclick="openPaymentModal({{ test.id }}, '{{ test.title }}')" class="btn-start">
                     Testni Boshlash <i class="fas fa-chevron-right"></i>
