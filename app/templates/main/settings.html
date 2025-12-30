@@ -202,14 +202,14 @@
         </div>
         
         {% if messages %}
-        {% for message in messages %}
-        {% if forloop.first %}
-        <div class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
-            {{ message }}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
         </div>
-        {% endif %}
-        {% endfor %}
         {% endif %}
         
         <form method="post" enctype="multipart/form-data">

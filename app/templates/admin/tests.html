@@ -835,8 +835,12 @@
             
             <div class="form-row">
                 <div class="form-group">
-                    <label>Test Title</label>
-                    <input type="text" id="test-title" required placeholder="e.g., SAT Practice Test 1">
+                    <label>Test Title (Test Set Name)</label>
+                    <input type="text" id="test-title" required placeholder="e.g., Practice Test 1" list="existing-titles">
+                    <datalist id="existing-titles"></datalist>
+                    <small style="color: #94a3b8; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                        Barcha 4ta modul (Eng 1, 2, Math 1, 2) bir xil nom ostida bo'lishi kerak.
+                    </small>
                 </div>
                 <div class="form-group">
                     <label>Duration (minutes)</label>
@@ -1142,35 +1146,48 @@ async function loadTests() {
             return;
         }
 
-        // Group tests by title with all 4 modules
+        // Group tests by title with all 4 modules (case-insensitive)
         const groups = {};
         result.data.forEach(test => {
-            if (!groups[test.title]) {
-                groups[test.title] = { 
+            const titleKey = test.title.trim().toLowerCase();
+            if (!groups[titleKey]) {
+                groups[titleKey] = { 
+                    displayTitle: test.title.trim(),
                     english_module1: null, 
                     english_module2: null,
                     math_module1: null,
                     math_module2: null
                 };
             }
-            groups[test.title][test.test_type] = test;
+            groups[titleKey][test.test_type] = test;
+            // Prefer English Module 1 for display title if available
+            if (test.test_type === 'english_module1') {
+                groups[titleKey].displayTitle = test.title.trim();
+            }
         });
 
-        const filteredTitles = Object.keys(groups).filter(title => {
+        // Populate existing titles datalist
+        const datalist = document.getElementById('existing-titles');
+        datalist.innerHTML = Object.keys(groups).map(key => {
+            return `<option value="${groups[key].displayTitle}">`;
+        }).join('');
+
+        const filteredKeys = Object.keys(groups).filter(key => {
             if (currentCategory === 'all') return true;
-            const group = groups[title];
+            const group = groups[key];
             if (currentCategory === 'english') return group.english_module1 !== null || group.english_module2 !== null;
             if (currentCategory === 'math') return group.math_module1 !== null || group.math_module2 !== null;
             return true;
         });
 
-        if (filteredTitles.length === 0) {
+        if (filteredKeys.length === 0) {
             grid.innerHTML = '<div class="no-data">No tests found for this category.</div>';
             return;
         }
         
-        grid.innerHTML = filteredTitles.map(title => {
-            const group = groups[title];
+        grid.innerHTML = filteredKeys.map(key => {
+            const group = groups[key];
+            const title = group.displayTitle;
             const hasE1 = !!group.english_module1;
             const hasE2 = !!group.english_module2;
             const hasM1 = !!group.math_module1;

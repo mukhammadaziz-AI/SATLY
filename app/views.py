@@ -149,8 +149,10 @@ def user_dashboard(request):
     all_tests = Test.objects.filter(is_active=True).order_by('-created_at')
     grouped_tests = {}
     for test in all_tests:
-        if test.title not in grouped_tests:
-            grouped_tests[test.title] = {
+        # Group by title (case-insensitive)
+        title_key = test.title.strip().lower()
+        if title_key not in grouped_tests:
+            grouped_tests[title_key] = {
                 'title': test.title,
                 'english_module1': None,
                 'english_module2': None,
@@ -163,13 +165,14 @@ def user_dashboard(request):
                 'category': 'english' # Default to english for styling
             }
         
-        grouped_tests[test.title][test.test_type] = test
-        grouped_tests[test.title]['total_questions'] += test.questions_count
-        grouped_tests[test.title]['total_duration'] += test.duration
+        grouped_tests[title_key][test.test_type] = test
+        grouped_tests[title_key]['total_questions'] += test.questions_count
+        grouped_tests[title_key]['total_duration'] += test.duration
         
         # Set the main entry point ID to English Module 1 if available
         if test.test_type == 'english_module1':
-            grouped_tests[test.title]['id'] = test.id
+            grouped_tests[title_key]['id'] = test.id
+            grouped_tests[title_key]['title'] = test.title # Keep original casing from E1 if possible
 
     # Filter for complete sets (all 4 modules)
     available_tests = []
@@ -947,11 +950,12 @@ def api_test_create(request):
     title = data['title'].strip()
     test_type = data['test_type']
     
-    # Try to find existing test to update if it's the same title and type
-    test = Test.objects.filter(title=title, test_type=test_type).first()
+    # Try to find existing test to update if it's the same title (case-insensitive) and type
+    test = Test.objects.filter(title__iexact=title, test_type=test_type).first()
     
     if test:
-        test.description = data.get('description', test.description)
+        # Update existing test module
+        test.title = title # Update title to match new input if casing changed
         test.category = data['category']
         test.difficulty = data.get('difficulty', test.difficulty)
         test.duration = data['duration']
