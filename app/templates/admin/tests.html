@@ -373,42 +373,64 @@
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         border: 1px solid rgba(148, 163, 184, 0.2);
         border-radius: 28px;
-        width: 90%;
-        max-width: 900px;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-
-    .modal-header {
+        width: 95%;
+        max-width: 1100px;
+        max-height: 95vh;
+        overflow: hidden;
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 2rem 2.5rem;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+        flex-direction: column;
     }
 
-    .modal-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #f1f5f9;
+    .modal-body {
+        overflow-y: auto;
+        padding: 0;
+        flex: 1;
     }
 
-    .close-modal {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        background: rgba(100, 116, 139, 0.2);
+    .test-tabs {
+        display: flex;
+        background: rgba(15, 23, 42, 0.4);
+        padding: 0.5rem 1rem 0;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        gap: 0.5rem;
+    }
+
+    .test-tab-btn {
+        padding: 1rem 1.5rem;
+        background: transparent;
         border: none;
+        border-bottom: 3px solid transparent;
         color: #94a3b8;
-        font-size: 1.5rem;
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
-    .close-modal:hover {
-        background: rgba(239, 68, 68, 0.2);
-        color: #f87171;
+    .test-tab-btn:hover {
+        color: #f1f5f9;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .test-tab-btn.active {
+        color: #60a5fa;
+        border-bottom-color: #60a5fa;
+    }
+
+    .test-tab-btn i {
+        font-size: 0.9rem;
+    }
+
+    .tab-content {
+        display: none;
+        padding: 2.5rem;
+    }
+
+    .tab-content.active {
+        display: block;
     }
 
     .subject-selector, .module-selector {
@@ -823,66 +845,153 @@
 <div id="test-modal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 id="modal-title" class="modal-title">Add New Test</h3>
+            <h3 id="modal-title" class="modal-title">Create / Edit Test Set</h3>
             <button class="close-modal">&times;</button>
         </div>
         <form id="test-form">
-            <input type="hidden" id="test-id">
-            <input type="hidden" id="test-category">
-            <input type="hidden" id="test-module">
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Test Title (Test Set Name)</label>
-                    <input type="text" id="test-title" required placeholder="e.g., Practice Test 1" list="existing-titles">
-                    <datalist id="existing-titles"></datalist>
-                    <small style="color: #94a3b8; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
-                        Barcha 4ta modul (Eng 1, 2, Math 1, 2) bir xil nom ostida bo'lishi kerak.
-                    </small>
+            <div class="modal-body">
+                <div style="padding: 2.5rem 2.5rem 0;">
+                    <input type="hidden" id="test-id">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Test Set Name (Shared for all 4 modules)</label>
+                            <input type="text" id="test-title" required placeholder="e.g., Practice Test 1" list="existing-titles">
+                            <datalist id="existing-titles"></datalist>
+                            <small style="color: #94a3b8; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                                Barcha 4ta modul (Eng 1, 2, Math 1, 2) mana shu nom ostida yig'iladi.
+                            </small>
+                        </div>
+                        <div class="form-group">
+                            <label>Global Difficulty</label>
+                            <select id="test-difficulty">
+                                <option value="easy">Easy</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Duration (minutes)</label>
-                    <input type="number" id="test-duration" min="1" required value="32">
+
+                <div class="test-tabs">
+                    <button type="button" class="test-tab-btn active" data-tab="english_module1" onclick="switchTab('english_module1')">
+                        <i class="fas fa-book-open"></i> Eng 1
+                    </button>
+                    <button type="button" class="test-tab-btn" data-tab="english_module2" onclick="switchTab('english_module2')">
+                        <i class="fas fa-pen-fancy"></i> Eng 2
+                    </button>
+                    <button type="button" class="test-tab-btn" data-tab="math_module1" onclick="switchTab('math_module1')">
+                        <i class="fas fa-calculator"></i> Math 1
+                    </button>
+                    <button type="button" class="test-tab-btn" data-tab="math_module2" onclick="switchTab('math_module2')">
+                        <i class="fas fa-square-root-alt"></i> Math 2
+                    </button>
                 </div>
-            </div>
-            
-            <div class="form-group">
-                <label>Description</label>
-                <textarea id="test-description" rows="2" placeholder="Test description..."></textarea>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Difficulty</label>
-                    <select id="test-difficulty">
-                        <option value="easy">Easy</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="hard">Hard</option>
-                    </select>
+
+                <div id="english_module1_tab" class="tab-content active">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Module Duration (min)</label>
+                            <input type="number" class="module-duration" id="dur_english_module1" value="32">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select class="module-active" id="active_english_module1">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="questions-section">
+                        <div class="questions-header">
+                            <h4><i class="fas fa-list-ol"></i> English Module 1 Questions <span class="q-count-badge" id="count_english_module1">(0/27)</span></h4>
+                        </div>
+                        <div id="container_english_module1" class="questions-container-list"></div>
+                        <button type="button" class="add-question-btn" onclick="addQuestion('english_module1')">
+                            <i class="fas fa-plus"></i> Add Question to Eng 1
+                        </button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select id="test-active">
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
-                    </select>
+
+                <div id="english_module2_tab" class="tab-content">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Module Duration (min)</label>
+                            <input type="number" class="module-duration" id="dur_english_module2" value="32">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select class="module-active" id="active_english_module2">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="questions-section">
+                        <div class="questions-header">
+                            <h4><i class="fas fa-list-ol"></i> English Module 2 Questions <span class="q-count-badge" id="count_english_module2">(0/27)</span></h4>
+                        </div>
+                        <div id="container_english_module2" class="questions-container-list"></div>
+                        <button type="button" class="add-question-btn" onclick="addQuestion('english_module2')">
+                            <i class="fas fa-plus"></i> Add Question to Eng 2
+                        </button>
+                    </div>
+                </div>
+
+                <div id="math_module1_tab" class="tab-content">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Module Duration (min)</label>
+                            <input type="number" class="module-duration" id="dur_math_module1" value="35">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select class="module-active" id="active_math_module1">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="questions-section">
+                        <div class="questions-header">
+                            <h4><i class="fas fa-list-ol"></i> Math Module 1 Questions <span class="q-count-badge" id="count_math_module1">(0/22)</span></h4>
+                        </div>
+                        <div id="container_math_module1" class="questions-container-list"></div>
+                        <button type="button" class="add-question-btn" onclick="addQuestion('math_module1')">
+                            <i class="fas fa-plus"></i> Add Question to Math 1
+                        </button>
+                    </div>
+                </div>
+
+                <div id="math_module2_tab" class="tab-content">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Module Duration (min)</label>
+                            <input type="number" class="module-duration" id="dur_math_module2" value="35">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select class="module-active" id="active_math_module2">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="questions-section">
+                        <div class="questions-header">
+                            <h4><i class="fas fa-list-ol"></i> Math Module 2 Questions <span class="q-count-badge" id="count_math_module2">(0/22)</span></h4>
+                        </div>
+                        <div id="container_math_module2" class="questions-container-list"></div>
+                        <button type="button" class="add-question-btn" onclick="addQuestion('math_module2')">
+                            <i class="fas fa-plus"></i> Add Question to Math 2
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div class="questions-section">
-                <div class="questions-header">
-                    <h4><i class="fas fa-list-ol"></i> Questions <span id="question-count-badge">(0/<span id="max-questions">27</span>)</span></h4>
-                </div>
-                <div id="questions-container">
-                </div>
-                <button type="button" class="add-question-btn" onclick="addQuestion()">
-                    <i class="fas fa-plus"></i> Add Question
-                </button>
-            </div>
-
-            <div class="form-actions">
+            <div class="form-actions" style="padding: 1.5rem 2.5rem; background: rgba(15, 23, 42, 0.4);">
                 <button type="button" class="btn-secondary close-modal">Cancel</button>
-                <button type="submit" class="btn-primary">Save Test</button>
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Save All Modules</button>
             </div>
         </form>
     </div>
@@ -893,9 +1002,19 @@
 <script>
 let currentCategory = 'all';
 let selectedSubject = '';
-let selectedModule = '';
-let questionCount = 0;
-let maxQuestions = 27;
+let activeTab = 'english_module1';
+let questionCounts = {
+    'english_module1': 0,
+    'english_module2': 0,
+    'math_module1': 0,
+    'math_module2': 0
+};
+const MAX_QUESTIONS = {
+    'english_module1': 27,
+    'english_module2': 27,
+    'math_module1': 22,
+    'math_module2': 22
+};
 
 document.addEventListener('DOMContentLoaded', function() {
     loadTests();
@@ -913,135 +1032,64 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', closeAllModals);
     });
     
-    document.getElementById('test-form').addEventListener('submit', saveTest);
+    document.getElementById('test-form').addEventListener('submit', saveAllModules);
 });
 
 function closeAllModals() {
     document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
 }
 
+function switchTab(tabName) {
+    activeTab = tabName;
+    document.querySelectorAll('.test-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === `${tabName}_tab`);
+    });
+}
+
 function openSubjectSelector() {
     closeAllModals();
-    document.getElementById('subject-selector-modal').classList.add('show');
-}
-
-function selectSubject(subject) {
-    selectedSubject = subject;
-    closeAllModals();
-    
-    const moduleContent = document.getElementById('module-selector-content');
-    const title = document.getElementById('module-selector-title');
-    
-    if (subject === 'english') {
-        title.textContent = 'Select English Module';
-        moduleContent.innerHTML = `
-            <div class="module-card" onclick="selectModule('english_module1')">
-                <div class="module-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <i class="fas fa-book-reader"></i>
-                </div>
-                <h4>Module 1</h4>
-                <p>Reading & Writing</p>
-                <span class="badge-info">27 Questions • 32 min</span>
-            </div>
-            <div class="module-card" onclick="selectModule('english_module2')">
-                <div class="module-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <i class="fas fa-pen-fancy"></i>
-                </div>
-                <h4>Module 2</h4>
-                <p>Reading & Writing</p>
-                <span class="badge-info">27 Questions • 32 min</span>
-            </div>
-        `;
-        maxQuestions = 27;
-    } else {
-        title.textContent = 'Select Math Module';
-        moduleContent.innerHTML = `
-            <div class="module-card" onclick="selectModule('math_module1')">
-                <div class="module-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-                    <i class="fas fa-square-root-alt"></i>
-                </div>
-                <h4>Module 1</h4>
-                <p>No Calculator Section</p>
-                <span class="badge-info">22 Questions • 35 min</span>
-            </div>
-            <div class="module-card" onclick="selectModule('math_module2')">
-                <div class="module-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <i class="fas fa-calculator"></i>
-                </div>
-                <h4>Module 2</h4>
-                <p>Calculator Section</p>
-                <span class="badge-info">22 Questions • 35 min</span>
-            </div>
-        `;
-        maxQuestions = 22;
-    }
-    
-    document.getElementById('module-selector-modal').classList.add('show');
-}
-
-function selectModule(module) {
-    selectedModule = module;
-    closeAllModals();
-    openTestForm();
-}
-
-function openTestForm() {
-    document.getElementById('modal-title').textContent = `Add ${selectedSubject.charAt(0).toUpperCase() + selectedSubject.slice(1)} Test - ${getModuleName(selectedModule)}`;
     document.getElementById('test-form').reset();
     document.getElementById('test-id').value = '';
-    document.getElementById('test-category').value = selectedSubject;
-    document.getElementById('test-module').value = selectedModule;
-    document.getElementById('questions-container').innerHTML = '';
-    questionCount = 0;
+    // Reset all containers
+    Object.keys(questionCounts).forEach(m => {
+        document.getElementById(`container_${m}`).innerHTML = '';
+        questionCounts[m] = 0;
+        updateQuestionCount(m);
+    });
     
-    if (selectedSubject === 'math') {
-        maxQuestions = 22;
-        document.getElementById('test-duration').value = 35;
-    } else {
-        maxQuestions = 27;
-        document.getElementById('test-duration').value = 32;
-    }
-    
-    document.getElementById('max-questions').textContent = maxQuestions;
-    updateQuestionCount();
-    
+    switchTab('english_module1');
+    document.getElementById('modal-title').textContent = 'Create New Test Set';
     document.getElementById('test-modal').classList.add('show');
 }
 
-function getModuleName(module) {
-    const names = {
-        'english_module1': 'English Module 1',
-        'english_module2': 'English Module 2',
-        'math_module1': 'Math Module 1',
-        'math_module2': 'Math Module 2'
-    };
-    return names[module] || module;
-}
-
-function addQuestion() {
-    if (questionCount >= maxQuestions) {
-        alert(`Maximum ${maxQuestions} questions allowed for this module`);
+function addQuestion(module) {
+    if (questionCounts[module] >= MAX_QUESTIONS[module]) {
+        alert(`Maximum ${MAX_QUESTIONS[module]} questions allowed for ${module}`);
         return;
     }
     
-    questionCount++;
-    const container = document.getElementById('questions-container');
-    const showImageUpload = selectedSubject === 'math';
+    questionCounts[module]++;
+    const container = document.getElementById(`container_${module}`);
+    const isMath = module.startsWith('math');
+    const qNum = questionCounts[module];
     
     const questionHtml = `
-        <div class="question-item" data-question="${questionCount}">
+        <div class="question-item" data-question="${qNum}">
             <div class="question-item-header">
-                <span class="question-number">Question ${questionCount}</span>
-                <button type="button" class="delete-question-btn" onclick="deleteQuestion(this)">
+                <span class="question-number">Question ${qNum}</span>
+                <button type="button" class="delete-question-btn" onclick="deleteQuestion(this, '${module}')">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
             <textarea class="question-text-input" placeholder="Enter question text..." rows="2" required></textarea>
-            ${showImageUpload ? `
+            ${isMath ? `
             <div class="image-upload-section">
                 <label class="image-upload-label">
                     <i class="fas fa-image"></i>
-                    <span>Add image (optional for math symbols)</span>
+                    <span>Add image (optional)</span>
                     <input type="file" class="image-upload-input" accept="image/*" onchange="handleImageUpload(this)">
                 </label>
                 <div class="image-preview"></div>
@@ -1049,22 +1097,22 @@ function addQuestion() {
             ` : ''}
             <div class="options-grid">
                 <div class="option-item">
-                    <input type="radio" name="correct_${questionCount}" value="A" class="option-radio" required>
+                    <input type="radio" name="correct_${module}_${qNum}" value="A" class="option-radio" required>
                     <span class="option-label">A)</span>
                     <input type="text" class="option-input" placeholder="Option A" required>
                 </div>
                 <div class="option-item">
-                    <input type="radio" name="correct_${questionCount}" value="B" class="option-radio">
+                    <input type="radio" name="correct_${module}_${qNum}" value="B" class="option-radio">
                     <span class="option-label">B)</span>
                     <input type="text" class="option-input" placeholder="Option B" required>
                 </div>
                 <div class="option-item">
-                    <input type="radio" name="correct_${questionCount}" value="C" class="option-radio">
+                    <input type="radio" name="correct_${module}_${qNum}" value="C" class="option-radio">
                     <span class="option-label">C)</span>
                     <input type="text" class="option-input" placeholder="Option C" required>
                 </div>
                 <div class="option-item">
-                    <input type="radio" name="correct_${questionCount}" value="D" class="option-radio">
+                    <input type="radio" name="correct_${module}_${qNum}" value="D" class="option-radio">
                     <span class="option-label">D)</span>
                     <input type="text" class="option-input" placeholder="Option D" required>
                 </div>
@@ -1073,18 +1121,19 @@ function addQuestion() {
     `;
     
     container.insertAdjacentHTML('beforeend', questionHtml);
-    updateQuestionCount();
+    updateQuestionCount(module);
     container.scrollTop = container.scrollHeight;
 }
 
-function deleteQuestion(btn) {
+function deleteQuestion(btn, module) {
     btn.closest('.question-item').remove();
-    renumberQuestions();
+    renumberQuestions(module);
 }
 
-function renumberQuestions() {
-    const questions = document.querySelectorAll('.question-item');
-    questionCount = questions.length;
+function renumberQuestions(module) {
+    const container = document.getElementById(`container_${module}`);
+    const questions = container.querySelectorAll('.question-item');
+    questionCounts[module] = questions.length;
     
     questions.forEach((q, index) => {
         const num = index + 1;
@@ -1093,15 +1142,15 @@ function renumberQuestions() {
         
         const radios = q.querySelectorAll('.option-radio');
         radios.forEach(radio => {
-            radio.name = `correct_${num}`;
+            radio.name = `correct_${module}_${num}`;
         });
     });
     
-    updateQuestionCount();
+    updateQuestionCount(module);
 }
 
-function updateQuestionCount() {
-    document.getElementById('question-count-badge').innerHTML = `(${questionCount}/<span id="max-questions">${maxQuestions}</span>)`;
+function updateQuestionCount(module) {
+    document.getElementById(`count_${module}`).innerHTML = `(${questionCounts[module]}/${MAX_QUESTIONS[module]})`;
 }
 
 function handleImageUpload(input) {
@@ -1136,7 +1185,6 @@ async function loadTests() {
     try {
         const response = await fetch('/api/tests/');
         const result = await response.json();
-        
         const grid = document.getElementById('tests-grid');
         
         if (result.data.length === 0) {
@@ -1144,7 +1192,6 @@ async function loadTests() {
             return;
         }
 
-        // Group tests by title with all 4 modules (case-insensitive)
         const groups = {};
         result.data.forEach(test => {
             const titleKey = test.title.trim().toLowerCase();
@@ -1158,23 +1205,19 @@ async function loadTests() {
                 };
             }
             groups[titleKey][test.test_type] = test;
-            // Prefer English Module 1 for display title if available
             if (test.test_type === 'english_module1') {
                 groups[titleKey].displayTitle = test.title.trim();
             }
         });
 
-        // Populate existing titles datalist
         const datalist = document.getElementById('existing-titles');
-        datalist.innerHTML = Object.keys(groups).map(key => {
-            return `<option value="${groups[key].displayTitle}">`;
-        }).join('');
+        datalist.innerHTML = Object.keys(groups).map(key => `<option value="${groups[key].displayTitle}">`).join('');
 
         const filteredKeys = Object.keys(groups).filter(key => {
             if (currentCategory === 'all') return true;
             const group = groups[key];
-            if (currentCategory === 'english') return group.english_module1 !== null || group.english_module2 !== null;
-            if (currentCategory === 'math') return group.math_module1 !== null || group.math_module2 !== null;
+            if (currentCategory === 'english') return group.english_module1 || group.english_module2;
+            if (currentCategory === 'math') return group.math_module1 || group.math_module2;
             return true;
         });
 
@@ -1214,6 +1257,9 @@ async function loadTests() {
                             </div>
                         </div>
                         <div class="test-actions-main">
+                            <button class="q-action-btn edit" onclick="editTestSet('${escapedTitle}')" title="Edit entire set">
+                                <i class="fas fa-edit"></i>
+                            </button>
                             <button class="q-action-btn delete" onclick="deleteTestSet('${escapedTitle}')" title="Delete entire set">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
@@ -1221,23 +1267,20 @@ async function loadTests() {
                     </div>
                     
                     <div class="sections-container">
-                        <!-- English Column -->
                         <div class="section-column">
                             <div class="section-header">
                                 <h4 class="section-title"><i class="fas fa-book-open"></i> English</h4>
-                                <button class="add-section-btn" onclick="addSpecificTest('${escapedTitle}', 'english')">Add Module</button>
+                                <button class="add-section-btn" onclick="addSpecificModule('${escapedTitle}', 'english_module1')">Add/Edit</button>
                             </div>
                             <div class="questions-list">
                                 ${hasE1 ? renderModuleInfo(group.english_module1, 'Module 1') : '<p style="color: #f87171; font-size: 0.8rem;">Module 1 missing</p>'}
                                 ${hasE2 ? renderModuleInfo(group.english_module2, 'Module 2') : '<p style="color: #f87171; font-size: 0.8rem;">Module 2 missing</p>'}
                             </div>
                         </div>
-
-                        <!-- Math Column -->
                         <div class="section-column">
                             <div class="section-header">
                                 <h4 class="section-title"><i class="fas fa-calculator"></i> Math</h4>
-                                <button class="add-section-btn" onclick="addSpecificTest('${escapedTitle}', 'math')">Add Module</button>
+                                <button class="add-section-btn" onclick="addSpecificModule('${escapedTitle}', 'math_module1')">Add/Edit</button>
                             </div>
                             <div class="questions-list">
                                 ${hasM1 ? renderModuleInfo(group.math_module1, 'Module 1') : '<p style="color: #f87171; font-size: 0.8rem;">Module 1 missing</p>'}
@@ -1245,8 +1288,7 @@ async function loadTests() {
                             </div>
                         </div>
                     </div>
-                    
-                    ${isComplete ? '<p style="color: #34d399; text-align: center; margin-top: 1rem; font-weight: 600;"><i class="fas fa-check-circle"></i> Complete - Ready for users</p>' : '<p style="color: #f87171; text-align: center; margin-top: 1rem; font-weight: 600;"><i class="fas fa-exclamation-circle"></i> Incomplete - Add missing modules</p>'}
+                    ${isComplete ? '<p style="color: #34d399; text-align: center; margin-top: 1rem; font-weight: 600;"><i class="fas fa-check-circle"></i> Complete</p>' : '<p style="color: #f87171; text-align: center; margin-top: 1rem; font-weight: 600;"><i class="fas fa-exclamation-circle"></i> Incomplete</p>'}
                 </div>
             `;
         }).join('');
@@ -1256,341 +1298,178 @@ async function loadTests() {
 }
 
 function renderModuleInfo(test, moduleName) {
-    const qCount = test.questions ? test.questions.length : test.questions_count || 0;
     return `
-        <div class="question-row" style="cursor: pointer;" onclick="editTest(${test.id})">
+        <div class="question-row">
             <div class="question-info">
                 <span class="question-label">${moduleName}</span>
-                <span class="question-preview">${qCount} questions • ${test.duration} min</span>
-            </div>
-            <div class="question-actions">
-                <button class="q-action-btn edit"><i class="fas fa-edit"></i></button>
+                <span class="question-preview">${test.questions_count} questions • ${test.duration} min</span>
             </div>
         </div>
     `;
 }
 
-function addSpecificTest(title, category) {
-    selectedSubject = category;
-    closeAllModals();
-    
-    // We need to escape the title for the onclick attribute in the generated HTML
-    const escapedTitleForAttr = title.replace(/'/g, "\\'");
-    const moduleContent = document.getElementById('module-selector-content');
-    const titleEl = document.getElementById('module-selector-title');
-    
-    if (category === 'english') {
-        titleEl.textContent = 'Select English Module';
-        moduleContent.innerHTML = `
-            <div class="module-card" onclick="selectModuleForTitle('${escapedTitleForAttr}', 'english_module1')">
-                <div class="module-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <i class="fas fa-book-reader"></i>
-                </div>
-                <h4>Module 1</h4>
-                <p>Reading & Writing</p>
-                <span class="badge-info">27 Questions • 32 min</span>
-            </div>
-            <div class="module-card" onclick="selectModuleForTitle('${escapedTitleForAttr}', 'english_module2')">
-                <div class="module-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <i class="fas fa-pen-fancy"></i>
-                </div>
-                <h4>Module 2</h4>
-                <p>Reading & Writing</p>
-                <span class="badge-info">27 Questions • 32 min</span>
-            </div>
-        `;
-        maxQuestions = 27;
-    } else {
-        titleEl.textContent = 'Select Math Module';
-        moduleContent.innerHTML = `
-            <div class="module-card" onclick="selectModuleForTitle('${escapedTitleForAttr}', 'math_module1')">
-                <div class="module-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-                    <i class="fas fa-square-root-alt"></i>
-                </div>
-                <h4>Module 1</h4>
-                <p>No Calculator Section</p>
-                <span class="badge-info">22 Questions • 35 min</span>
-            </div>
-            <div class="module-card" onclick="selectModuleForTitle('${escapedTitleForAttr}', 'math_module2')">
-                <div class="module-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <i class="fas fa-calculator"></i>
-                </div>
-                <h4>Module 2</h4>
-                <p>Calculator Section</p>
-                <span class="badge-info">22 Questions • 35 min</span>
-            </div>
-        `;
-        maxQuestions = 22;
+async function editTestSet(title) {
+    try {
+        const response = await fetch('/api/tests/');
+        const result = await response.json();
+        const modules = result.data.filter(t => t.title === title);
+        
+        openSubjectSelector();
+        document.getElementById('test-title').value = title;
+        document.getElementById('modal-title').textContent = `Edit Test Set: ${title}`;
+        
+        for (const mod of modules) {
+            const type = mod.test_type;
+            document.getElementById(`dur_${type}`).value = mod.duration;
+            document.getElementById(`active_${type}`).value = mod.is_active.toString();
+            document.getElementById('test-difficulty').value = mod.difficulty;
+            
+            const container = document.getElementById(`container_${type}`);
+            container.innerHTML = '';
+            questionCounts[type] = 0;
+            
+            if (mod.questions) {
+                mod.questions.forEach(q => addQuestionWithData(type, q));
+            }
+        }
+        
+        document.getElementById('test-modal').classList.add('show');
+    } catch (error) {
+        console.error('Error editing test set:', error);
     }
-    
-    document.getElementById('module-selector-modal').classList.add('show');
 }
 
-function selectModuleForTitle(title, module) {
-    selectedModule = module;
-    selectedSubject = module.startsWith('english') ? 'english' : 'math';
-    closeAllModals();
+function addQuestionWithData(module, data) {
+    questionCounts[module]++;
+    const container = document.getElementById(`container_${module}`);
+    const isMath = module.startsWith('math');
+    const qNum = questionCounts[module];
     
-    document.getElementById('modal-title').textContent = `Add ${selectedSubject.charAt(0).toUpperCase() + selectedSubject.slice(1)} Test - ${getModuleName(module)}`;
-    document.getElementById('test-form').reset();
-    document.getElementById('test-id').value = '';
-    document.getElementById('test-title').value = title;
-    document.getElementById('test-category').value = selectedSubject;
-    document.getElementById('test-module').value = module;
-    document.getElementById('questions-container').innerHTML = '';
-    questionCount = 0;
+    const questionHtml = `
+        <div class="question-item" data-question="${qNum}">
+            <div class="question-item-header">
+                <span class="question-number">Question ${qNum}</span>
+                <button type="button" class="delete-question-btn" onclick="deleteQuestion(this, '${module}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <textarea class="question-text-input" placeholder="Enter question text..." rows="2" required>${data.text || data.question_text || ''}</textarea>
+            ${isMath ? `
+            <div class="image-upload-section ${data.image ? 'has-image' : ''}">
+                <label class="image-upload-label">
+                    <i class="fas fa-image"></i>
+                    <span>Add image</span>
+                    <input type="file" class="image-upload-input" accept="image/*" onchange="handleImageUpload(this)">
+                </label>
+                <div class="image-preview">
+                    ${data.image ? `<img src="${data.image}"><button type="button" class="remove-image-btn" onclick="removeImage(this)"><i class="fas fa-times"></i></button>` : ''}
+                </div>
+            </div>
+            ` : ''}
+            <div class="options-grid">
+                ${['A', 'B', 'C', 'D'].map(label => {
+                    const opt = data.options ? data.options.find(o => o.label === label) : null;
+                    const isCorrect = data.correct_answer === label;
+                    const text = opt ? opt.text : (data[`option_${label.toLowerCase()}`] || '');
+                    return `
+                    <div class="option-item">
+                        <input type="radio" name="correct_${module}_${qNum}" value="${label}" class="option-radio" ${isCorrect ? 'checked' : ''} required>
+                        <span class="option-label">${label})</span>
+                        <input type="text" class="option-input" placeholder="Option ${label}" value="${text}" required>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', questionHtml);
+    updateQuestionCount(module);
+}
+
+function addSpecificModule(title, module) {
+    editTestSet(title).then(() => {
+        switchTab(module);
+    });
+}
+
+async function saveAllModules(e) {
+    e.preventDefault();
+    const title = document.getElementById('test-title').value.trim();
+    const difficulty = document.getElementById('test-difficulty').value;
     
-    if (selectedSubject === 'math') {
-        maxQuestions = 22;
-        document.getElementById('test-duration').value = 35;
-    } else {
-        maxQuestions = 27;
-        document.getElementById('test-duration').value = 32;
+    const modulesToSave = ['english_module1', 'english_module2', 'math_module1', 'math_module2'];
+    let savedCount = 0;
+    
+    for (const moduleType of modulesToSave) {
+        const container = document.getElementById(`container_${moduleType}`);
+        const questions = [];
+        
+        container.querySelectorAll('.question-item').forEach((item, idx) => {
+            const qText = item.querySelector('.question-text-input').value;
+            const opts = [];
+            let correct = '';
+            
+            item.querySelectorAll('.option-item').forEach(opt => {
+                const label = opt.querySelector('.option-label').textContent.replace(')', '');
+                opts.push({ label: label, text: opt.querySelector('.option-input').value });
+                if (opt.querySelector('.option-radio').checked) correct = label;
+            });
+            
+            const img = item.querySelector('.image-preview img');
+            questions.push({
+                order: idx + 1,
+                text: qText,
+                options: opts,
+                correct_answer: correct,
+                image: img ? img.src : null
+            });
+        });
+        
+        if (questions.length === 0) continue; // Skip empty modules
+        
+        const data = {
+            title: title,
+            category: moduleType.startsWith('english') ? 'english' : 'math',
+            test_type: moduleType,
+            difficulty: difficulty,
+            duration: parseInt(document.getElementById(`dur_${moduleType}`).value),
+            questions_count: questions.length,
+            questions: questions,
+            is_active: document.getElementById(`active_${moduleType}`).value === 'true'
+        };
+        
+        try {
+            await fetch('/api/tests/create/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            savedCount++;
+        } catch (err) {
+            console.error(`Error saving ${moduleType}:`, err);
+        }
     }
     
-    document.getElementById('max-questions').textContent = maxQuestions;
-    updateQuestionCount();
-    
-    document.getElementById('test-modal').classList.add('show');
+    if (savedCount > 0) {
+        alert(`${savedCount} modules saved successfully!`);
+        closeAllModals();
+        loadTests();
+    } else {
+        alert('Please add at least one question to any module before saving.');
+    }
 }
 
 async function deleteTestSet(title) {
     if (!confirm(`Are you sure you want to delete all tests with title "${title}"?`)) return;
-    
     try {
         const response = await fetch('/api/tests/');
         const result = await response.json();
         const toDelete = result.data.filter(t => t.title === title);
-        
         for (const test of toDelete) {
             await fetch(`/api/tests/${test.id}/delete/`, { method: 'DELETE' });
         }
         loadTests();
     } catch (error) {
         console.error('Error deleting test set:', error);
-    }
-}
-
-async function deleteQuestionFromTest(testId, questionIndex) {
-    if (!confirm('Are you sure you want to delete this question?')) return;
-    
-    try {
-        const response = await fetch(`/api/tests/${testId}/`);
-        const test = await response.json();
-        
-        // Wait, api_test_detail doesn't return questions currently in the Read output.
-        // I need to update api_test_detail in views.py to return questions.
-    } catch (error) {
-        console.error('Error deleting question:', error);
-    }
-}
-
-async function editTest(testId) {
-    try {
-        const response = await fetch(`/api/tests/${testId}/`);
-        const test = await response.json();
-        
-        selectedSubject = test.category;
-        selectedModule = test.test_type;
-        maxQuestions = test.category === 'math' ? 22 : 27;
-        
-        document.getElementById('modal-title').textContent = `Edit Test - ${test.title}`;
-        document.getElementById('test-id').value = test.id;
-        document.getElementById('test-title').value = test.title;
-        document.getElementById('test-description').value = test.description || '';
-        document.getElementById('test-category').value = test.category;
-        document.getElementById('test-module').value = test.test_type;
-        document.getElementById('test-difficulty').value = test.difficulty;
-        document.getElementById('test-duration').value = test.duration;
-        document.getElementById('test-active').value = test.is_active.toString();
-        
-        const container = document.getElementById('questions-container');
-        container.innerHTML = '';
-        questionCount = 0;
-        
-        if (test.questions && test.questions.length > 0) {
-            test.questions.forEach(q => {
-                addQuestionWithData(q);
-            });
-        }
-        
-        document.getElementById('max-questions').textContent = maxQuestions;
-        updateQuestionCount();
-        
-        document.getElementById('test-modal').classList.add('show');
-    } catch (error) {
-        console.error('Error loading test:', error);
-    }
-}
-
-function addQuestionWithData(data) {
-    questionCount++;
-    const container = document.getElementById('questions-container');
-    const showImageUpload = selectedSubject === 'math';
-    
-    const questionHtml = `
-        <div class="question-item" data-question="${questionCount}">
-            <div class="question-item-header">
-                <span class="question-number">Question ${questionCount}</span>
-                <button type="button" class="delete-question-btn" onclick="deleteQuestion(this)">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-            <textarea class="question-text-input" placeholder="Enter question text..." rows="2" required>${data.text || data.question_text || ''}</textarea>
-            ${showImageUpload ? `
-            <div class="image-upload-section ${data.image ? 'has-image' : ''}">
-                <label class="image-upload-label">
-                    <i class="fas fa-image"></i>
-                    <span>Add image (optional for math symbols)</span>
-                    <input type="file" class="image-upload-input" accept="image/*" onchange="handleImageUpload(this)">
-                </label>
-                <div class="image-preview">
-                    ${data.image ? `<img src="${data.image}" alt="Question image"><button type="button" class="remove-image-btn" onclick="removeImage(this)"><i class="fas fa-times"></i></button>` : ''}
-                </div>
-            </div>
-            ` : ''}
-            <div class="options-grid">
-                ${['A', 'B', 'C', 'D'].map(label => {
-                    const option = data.options ? data.options.find(o => o.label === label) : null;
-                    const isCorrect = data.correct_answer === label;
-                    const optText = option ? option.text : (data[`option_${label.toLowerCase()}`] || '');
-                    
-                    return `
-                    <div class="option-item">
-                        <input type="radio" name="correct_${questionCount}" value="${label}" class="option-radio" ${isCorrect ? 'checked' : ''} required>
-                        <span class="option-label">${label})</span>
-                        <input type="text" class="option-input" placeholder="Option ${label}" value="${optText}" required>
-                    </div>`;
-                }).join('')}
-            </div>
-        </div>
-    `;
-    
-    container.insertAdjacentHTML('beforeend', questionHtml);
-}
-
-async function deleteQuestionFromTest(testId, questionIndex) {
-    if (!confirm('Are you sure you want to delete this question from the test?')) return;
-    
-    try {
-        const response = await fetch(`/api/tests/${testId}/`);
-        const test = await response.json();
-        
-        const newQuestions = test.questions.filter((_, idx) => idx !== questionIndex);
-        
-        await fetch(`/api/tests/${testId}/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                questions: newQuestions,
-                questions_count: newQuestions.length
-            })
-        });
-        
-        loadTests();
-    } catch (error) {
-        console.error('Error deleting question:', error);
-    }
-}
-
-async function saveTest(e) {
-    e.preventDefault();
-    const testId = document.getElementById('test-id').value;
-    
-    const questions = [];
-    document.querySelectorAll('.question-item').forEach((item, index) => {
-        const questionText = item.querySelector('.question-text-input').value;
-        const options = [];
-        let correctAnswer = '';
-        
-        item.querySelectorAll('.option-item').forEach(opt => {
-            const radio = opt.querySelector('.option-radio');
-            const input = opt.querySelector('.option-input');
-            const label = opt.querySelector('.option-label').textContent.replace(')', '');
-            
-            options.push({
-                label: label,
-                text: input.value
-            });
-            
-            if (radio.checked) {
-                correctAnswer = label;
-            }
-        });
-        
-        const imagePreview = item.querySelector('.image-preview img');
-        const imageData = imagePreview ? imagePreview.src : null;
-        
-        questions.push({
-            order: index + 1,
-            text: questionText,
-            options: options,
-            correct_answer: correctAnswer,
-            image: imageData
-        });
-    });
-    
-    const data = {
-        title: document.getElementById('test-title').value.trim(),
-        description: document.getElementById('test-description').value,
-        category: document.getElementById('test-category').value,
-        test_type: document.getElementById('test-module').value,
-        difficulty: document.getElementById('test-difficulty').value,
-        duration: parseInt(document.getElementById('test-duration').value),
-        questions_count: questions.length,
-        is_active: document.getElementById('test-active').value === 'true',
-        questions: questions
-    };
-    
-    try {
-        const url = testId ? `/api/tests/${testId}/` : '/api/tests/create/';
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            // Check for pairing
-            const allTestsResp = await fetch('/api/tests/');
-            const allTests = await allTestsResp.json();
-            const sameTitleTests = allTests.data.filter(t => t.title === data.title);
-            
-            const hasEnglish1 = sameTitleTests.some(t => t.test_type === 'english_module1');
-            const hasEnglish2 = sameTitleTests.some(t => t.test_type === 'english_module2');
-            const hasMath1 = sameTitleTests.some(t => t.test_type === 'math_module1');
-            const hasMath2 = sameTitleTests.some(t => t.test_type === 'math_module2');
-            
-            if (!hasEnglish1 || !hasEnglish2 || !hasMath1 || !hasMath2) {
-                const missing = [];
-                if (!hasEnglish1) missing.push('English Module 1');
-                if (!hasEnglish2) missing.push('English Module 2');
-                if (!hasMath1) missing.push('Math Module 1');
-                if (!hasMath2) missing.push('Math Module 2');
-                
-                alert(`Test saved! Note: This test set is still INCOMPLETE. Missing: ${missing.join(', ')}. Users won't be able to take the full exam until all modules are added.`);
-            } else {
-                alert('Success! Full test set is now complete and ready for users.');
-            }
-        }
-        
-        closeAllModals();
-        loadTests();
-    } catch (error) {
-        console.error('Error saving test:', error);
-    }
-}
-
-async function deleteTest(testId) {
-    if (!confirm('Are you sure you want to delete this test?')) return;
-    
-    try {
-        await fetch(`/api/tests/${testId}/delete/`, { method: 'DELETE' });
-        loadTests();
-    } catch (error) {
-        console.error('Error deleting test:', error);
     }
 }
 </script>
