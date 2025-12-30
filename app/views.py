@@ -152,30 +152,32 @@ def user_dashboard(request):
         if test.title not in grouped_tests:
             grouped_tests[test.title] = {
                 'title': test.title,
-                'english': None,
-                'math': None,
+                'english_module1': None,
+                'english_module2': None,
+                'math_module1': None,
+                'math_module2': None,
                 'total_questions': 0,
                 'total_duration': 0,
                 'id': test.id,
-                'category': test.category, # For styling
-                'description': test.description
+                'description': test.description,
+                'category': 'english' # Default to english for styling
             }
         
-        # Ensure we point to English Module 1 as the starting point if it exists
-        if test.test_type == 'english_module1':
-            grouped_tests[test.title]['english'] = test
-            grouped_tests[test.title]['id'] = test.id
-            grouped_tests[test.title]['category'] = 'english'
-        elif test.test_type == 'math_module1' and not grouped_tests[test.title]['english']:
-            # Fallback to Math if no English 1 exists yet
-            grouped_tests[test.title]['math'] = test
-            grouped_tests[test.title]['id'] = test.id
-            grouped_tests[test.title]['category'] = 'math'
-        
+        grouped_tests[test.title][test.test_type] = test
         grouped_tests[test.title]['total_questions'] += test.questions_count
         grouped_tests[test.title]['total_duration'] += test.duration
+        
+        # Set the main entry point ID to English Module 1 if available
+        if test.test_type == 'english_module1':
+            grouped_tests[test.title]['id'] = test.id
+
+    # Filter for complete sets (all 4 modules)
+    available_tests = []
+    for group in grouped_tests.values():
+        if group['english_module1'] and group['english_module2'] and \
+           group['math_module1'] and group['math_module2']:
+            available_tests.append(group)
     
-    available_tests = grouped_tests.values()
     
     total_time = sum([
         exam.time_spent for exam in ExamSession.objects.filter(user=user, status='completed')
@@ -292,15 +294,16 @@ def start_exam(request):
             del request.session['has_paid_for_attempt']
             
         test = None
-            if test_id:
-                test = get_object_or_404(Test, id=test_id)
-                # If they chose a specific module but it's part of a set, find the first module (English 1)
-                first_test = Test.objects.filter(title=test.title, test_type='english_module1', is_active=True).first()
-                if first_test:
-                    test = first_test
-            else:
-                # If no ID, pick the latest english test as the "Full Exam" entry point
-                test = Test.objects.filter(test_type='english_module1', is_active=True).order_by('-created_at').first()
+        if test_id:
+            test = get_object_or_404(Test, id=test_id)
+            # If they chose a specific module but it's part of a set, find the first module (English 1)
+            first_test = Test.objects.filter(title=test.title, test_type='english_module1', is_active=True).first()
+            if first_test:
+                test = first_test
+        else:
+            # If no ID, pick the latest english test as the "Full Exam" entry point
+            test = Test.objects.filter(test_type='english_module1', is_active=True).order_by('-created_at').first()
+
 
         session = ExamSession.objects.create(
             user=request.user, 
@@ -986,7 +989,7 @@ def api_tests_list(request):
             'difficulty': test.difficulty,
             'duration': test.duration,
             'questions_count': test.questions_count,
-            'questions': test.test_questions,
+            'questions': test.test_questions,  # Ensure questions are returned
             'is_active': test.is_active,
             'completions': completions,
             'avg_score': round(avg_score, 1) if avg_score else 0,
@@ -1013,7 +1016,21 @@ def api_test_create(request):
         is_active=data.get('is_active', True),
     )
     
-    return JsonResponse({'success': True, 'id': test.id})
+    # Check completeness
+    same_title = Test.objects.filter(title=test.title)
+    has_e1 = same_title.filter(test_type='english_module1').exists()
+    has_e2 = same_title.filter(test_type='english_module2').exists()
+    has_m1 = same_title.filter(test_type='math_module1').exists()
+    has_m2 = same_title.filter(test_type='math_module2').exists()
+    
+    is_complete = has_e1 and has_e2 and has_m1 and has_m2
+    
+    return JsonResponse({
+        'success': True, 
+        'id': test.id,
+        'is_complete': is_complete,
+        'message': 'Test saved successfully.' if is_complete else 'Test saved, but set is still incomplete.'
+    })
 
 
 @csrf_exempt
