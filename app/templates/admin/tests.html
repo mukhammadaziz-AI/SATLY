@@ -519,11 +519,15 @@
     .modal-body {
         overflow-y: auto;
         flex: 1;
+        scroll-behavior: smooth;
     }
 
     .test-tabs {
+        position: sticky;
+        top: 0;
+        z-index: 100;
         display: flex;
-        background: rgba(15, 23, 42, 0.6);
+        background: #1e293b;
         padding: 0 1.5rem;
         border-bottom: 1px solid rgba(148, 163, 184, 0.1);
         gap: 0.25rem;
@@ -690,37 +694,28 @@
     .questions-container-list {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
-        max-height: 400px;
-        overflow-y: auto;
-        padding-right: 0.5rem;
-        margin-bottom: 1rem;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
     }
 
-    .questions-container-list::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .questions-container-list::-webkit-scrollbar-track {
-        background: rgba(148, 163, 184, 0.1);
-        border-radius: 3px;
-    }
-
-    .questions-container-list::-webkit-scrollbar-thumb {
-        background: rgba(148, 163, 184, 0.3);
-        border-radius: 3px;
+    @keyframes fadeInScale {
+        from { opacity: 0; transform: scale(0.98) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     .question-item {
         background: rgba(15, 23, 42, 0.5);
         border: 1px solid rgba(148, 163, 184, 0.15);
-        border-radius: 14px;
-        padding: 1.25rem;
-        transition: all 0.2s;
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: fadeInScale 0.4s ease-out backwards;
     }
 
     .question-item:hover {
-        border-color: rgba(96, 165, 250, 0.3);
+        border-color: rgba(96, 165, 250, 0.4);
+        background: rgba(15, 23, 42, 0.7);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
 
     .question-item-header {
@@ -1421,7 +1416,15 @@ function addQuestion(module) {
     
     container.insertAdjacentHTML('beforeend', questionHtml);
     updateQuestionCount(module);
-    container.scrollTop = container.scrollHeight;
+    
+    // Smooth scroll to the newly added question
+    requestAnimationFrame(() => {
+        const modalBody = document.querySelector('.modal-body');
+        modalBody.scrollTo({
+            top: modalBody.scrollHeight,
+            behavior: 'smooth'
+        });
+    });
 }
 
 function addQuestionWithData(module, data) {
@@ -1470,6 +1473,13 @@ function addQuestionWithData(module, data) {
     `;
     container.insertAdjacentHTML('beforeend', questionHtml);
     updateQuestionCount(module);
+    
+    // Scroll for bulk loading too, but maybe less aggressive
+    if (qNum === 1) {
+        requestAnimationFrame(() => {
+            document.querySelector('.modal-body').scrollTop = 0;
+        });
+    }
 }
 
 function escapeHtml(text) {
