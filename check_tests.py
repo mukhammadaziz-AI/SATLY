@@ -1,5 +1,11 @@
-from app.models import Test
-import json
+import os
+import django
+os.environ['DJANGO_SETTINGS_MODULE'] = 'satly.settings'
+django.setup()
 
-tests = list(Test.objects.values('id', 'title', 'test_type', 'category'))
-print(json.dumps(tests, indent=2))
+from app.models import Test
+
+tests = Test.objects.all()
+for t in tests:
+    q_count = len(t.test_questions) if t.test_questions else 0
+    print(f'ID: {t.id}, Title: "{t.title}", Type: {t.test_type}, Q: {q_count}')

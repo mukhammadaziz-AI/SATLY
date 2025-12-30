@@ -920,7 +920,13 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': examData.csrfToken },
                 body: JSON.stringify({ session_id: examData.sessionId })
-            }).then(() => window.location.reload());
+            }).then(r => r.json()).then(data => {
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    window.location.reload();
+                }
+            });
         }
 
         // Calculator Logic

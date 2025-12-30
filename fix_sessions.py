@@ -1,12 +1,15 @@
 import os
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'satly.settings')
+os.environ['DJANGO_SETTINGS_MODULE'] = 'satly.settings'
 django.setup()
 
 from app.models import ExamSession
+from django.utils import timezone
 
-# Cancel all break/in_progress sessions
-sessions = ExamSession.objects.filter(status__in=['in_progress', 'break'])
-count = sessions.count()
-sessions.update(status='cancelled')
-print(f"Cancelled {count} sessions")
+sessions = ExamSession.objects.filter(status='break')
+for s in sessions:
+    s.status = 'completed'
+    s.completed_at = timezone.now()
+    s.total_score = s.english_score or 0
+    s.save()
+    print(f'Fixed session {s.id}')
