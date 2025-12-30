@@ -1075,7 +1075,7 @@ def payment_page(request):
     
     if request.method == 'POST':
         payment_method = request.POST.get('payment_method')
-        post_test_id = request.POST.get('test_id')
+        post_test_id = request.POST.get('test_id') or test_id
         
         # Initialize payment object
         payment = Payment.objects.create(
@@ -1126,13 +1126,14 @@ def payment_page(request):
         messages.success(request, f"✅ To'lovni muvaffaqiyatli amalga oshirdingiz! Endi barcha testlardan foydalanishingiz mumkin.")
         
         # Store test_id in session to be picked up by start_exam
-        if post_test_id:
+        if post_test_id and post_test_id.strip():
             request.session['pending_test_id'] = post_test_id
-        else:
-            # If no specific test_id, mark that they paid for a generic/any test attempt
             request.session['has_paid_for_attempt'] = True
-        
-        return redirect('start_exam')
+            return redirect('start_exam')
+        else:
+            # If no specific test_id, go to dashboard with success message
+            request.session['has_paid_for_attempt'] = True
+            return redirect('user_dashboard')
     
     return render(request, 'main/payment.html', {'settings': settings, 'test_id': test_id})
 
