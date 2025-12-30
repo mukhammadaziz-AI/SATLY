@@ -1274,14 +1274,15 @@ function addSpecificTest(title, category) {
     selectedSubject = category;
     closeAllModals();
     
-    const escapedTitle = title.replace(/'/g, "\\'");
+    // We need to escape the title for the onclick attribute in the generated HTML
+    const escapedTitleForAttr = title.replace(/'/g, "\\'");
     const moduleContent = document.getElementById('module-selector-content');
     const titleEl = document.getElementById('module-selector-title');
     
     if (category === 'english') {
         titleEl.textContent = 'Select English Module';
         moduleContent.innerHTML = `
-            <div class="module-card" onclick="selectModuleForTitle('${escapedTitle}', 'english_module1')">
+            <div class="module-card" onclick="selectModuleForTitle('${escapedTitleForAttr}', 'english_module1')">
                 <div class="module-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <i class="fas fa-book-reader"></i>
                 </div>
@@ -1289,7 +1290,7 @@ function addSpecificTest(title, category) {
                 <p>Reading & Writing</p>
                 <span class="badge-info">27 Questions • 32 min</span>
             </div>
-            <div class="module-card" onclick="selectModuleForTitle('${escapedTitle}', 'english_module2')">
+            <div class="module-card" onclick="selectModuleForTitle('${escapedTitleForAttr}', 'english_module2')">
                 <div class="module-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                     <i class="fas fa-pen-fancy"></i>
                 </div>
@@ -1302,7 +1303,7 @@ function addSpecificTest(title, category) {
     } else {
         titleEl.textContent = 'Select Math Module';
         moduleContent.innerHTML = `
-            <div class="module-card" onclick="selectModuleForTitle('${escapedTitle}', 'math_module1')">
+            <div class="module-card" onclick="selectModuleForTitle('${escapedTitleForAttr}', 'math_module1')">
                 <div class="module-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
                     <i class="fas fa-square-root-alt"></i>
                 </div>
@@ -1310,7 +1311,7 @@ function addSpecificTest(title, category) {
                 <p>No Calculator Section</p>
                 <span class="badge-info">22 Questions • 35 min</span>
             </div>
-            <div class="module-card" onclick="selectModuleForTitle('${escapedTitle}', 'math_module2')">
+            <div class="module-card" onclick="selectModuleForTitle('${escapedTitleForAttr}', 'math_module2')">
                 <div class="module-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                     <i class="fas fa-calculator"></i>
                 </div>

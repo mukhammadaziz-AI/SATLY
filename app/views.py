@@ -446,9 +446,9 @@ def find_next_test(current_test, next_type):
     if not current_test:
         return None
         
-    # 1. Try exact title match
+    # 1. Try case-insensitive title match
     next_test = Test.objects.filter(
-        title=current_test.title,
+        title__iexact=current_test.title.strip(),
         test_type=next_type,
         is_active=True
     ).first()
@@ -457,7 +457,7 @@ def find_next_test(current_test, next_type):
         return next_test
         
     # 2. Try partial match by removing common suffixes
-    base_title = current_test.title.replace(' - Reading', '').replace(' - Writing', '').replace(' - English', '').replace(' - Math', '').replace(' - Module 1', '').replace(' - Module 2', '').strip()
+    base_title = current_test.title.lower().replace(' - reading', '').replace(' - writing', '').replace(' - english', '').replace(' - math', '').replace(' - module 1', '').replace(' - module 2', '').strip()
     
     next_test = Test.objects.filter(
         title__icontains=base_title,
