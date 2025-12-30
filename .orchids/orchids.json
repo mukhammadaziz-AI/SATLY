@@ -1,0 +1,1 @@
+{\"projectId\": \"d19443ad-5b52-4626-9fbc-34584c1e120a\", \"createdAt\": 1735584727, \"startupCommands\": [\"py -3 manage.py runserver 0.0.0.0:8000\"]} 
