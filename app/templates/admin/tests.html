@@ -470,11 +470,20 @@
         border-radius: 24px;
         width: 100%;
         max-width: 1000px;
+        height: 90vh;
         max-height: 90vh;
         overflow: hidden;
         display: flex;
         flex-direction: column;
         animation: modalSlideIn 0.3s ease-out;
+    }
+
+    #test-form {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow: hidden;
+        min-height: 0;
     }
 
     @keyframes modalSlideIn {
@@ -486,9 +495,10 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1.5rem 2rem;
+        padding: 1.25rem 2rem;
         border-bottom: 1px solid rgba(148, 163, 184, 0.15);
         background: rgba(15, 23, 42, 0.4);
+        flex-shrink: 0;
     }
 
     .modal-title {
@@ -588,6 +598,7 @@
     .form-section {
         padding: 1.5rem 2rem;
         border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        flex-shrink: 0;
     }
 
     .form-row {
@@ -1417,14 +1428,13 @@ function addQuestion(module) {
     container.insertAdjacentHTML('beforeend', questionHtml);
     updateQuestionCount(module);
     
-    // Smooth scroll to the newly added question
-    requestAnimationFrame(() => {
-        const modalBody = document.querySelector('.modal-body');
-        modalBody.scrollTo({
-            top: modalBody.scrollHeight,
-            behavior: 'smooth'
-        });
-    });
+    // Improved auto-scroll logic
+    setTimeout(() => {
+        const newQuestion = container.lastElementChild;
+        if (newQuestion) {
+            newQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 50);
 }
 
 function addQuestionWithData(module, data) {
