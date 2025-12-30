@@ -278,6 +278,10 @@ def update_avatar(request):
 def start_exam(request):
     # Enforce payment for non-premium users
     has_paid = request.session.get('has_paid_for_attempt', False)
+    
+    # Check if user wants to start fresh after new payment
+    start_fresh = request.GET.get('fresh', '') == '1'
+    
     if request.user.subscription != 'premium' and not has_paid:
         # Check if there's an active session already - if so, allow it
         if not ExamSession.objects.filter(user=request.user, status__in=['in_progress', 'break']).exists():
@@ -285,6 +289,12 @@ def start_exam(request):
 
     # Check if a session is already in progress
     session = ExamSession.objects.filter(user=request.user, status__in=['in_progress', 'break']).first()
+    
+    # If user paid again and wants fresh start, cancel old session
+    if start_fresh and session and has_paid:
+        session.status = 'cancelled'
+        session.save()
+        session = None
     
     # Check for test_id from session or GET
     test_id = request.session.get('pending_test_id') or request.GET.get('test_id')
@@ -370,13 +380,16 @@ def start_exam(request):
     
     section_title = f"{session.test.title} - {get_module_display_name(session.test.test_type)}"
     
+    show_break = session.status == 'break'
+    
     return render(request, 'main/exam.html', {
         'exam_session': session,
         'questions': json.dumps(questions),
         'answers': json.dumps(answers),
         'time_remaining': time_remaining,
         'section_title': section_title,
-        'show_break': session.status == 'break'
+        'show_break': show_break,
+        'has_questions': len(questions) > 0
     })
 
 
@@ -1142,7 +1155,7 @@ def payment_page(request):
         if post_test_id and post_test_id.strip():
             request.session['pending_test_id'] = post_test_id
             request.session['has_paid_for_attempt'] = True
-            return redirect('start_exam')
+            return redirect('/exam/start/?fresh=1')
         else:
             # If no specific test_id, go to dashboard with success message
             request.session['has_paid_for_attempt'] = True
