@@ -313,63 +313,52 @@ def start_exam(request):
         )
         session.save()
     
-    # Determine questions
-    if session.test:
-        test_questions = session.test.test_questions
-        questions = []
-        for i, q in enumerate(test_questions):
-            opt_a = q.get('option_a', '')
-            opt_b = q.get('option_b', '')
-            opt_c = q.get('option_c', '')
-            opt_d = q.get('option_d', '')
+    # Determine questions - ONLY from database, no defaults
+    if not session.test:
+        messages.error(request, "Test topilmadi. Iltimos, boshqa test tanlang.")
+        session.delete()
+        return redirect('user_dashboard')
+    
+    test_questions = session.test.test_questions
+    if not test_questions:
+        messages.error(request, "Bu testda savollar topilmadi.")
+        session.delete()
+        return redirect('user_dashboard')
+    
+    questions = []
+    for i, q in enumerate(test_questions):
+        opt_a = q.get('option_a', '')
+        opt_b = q.get('option_b', '')
+        opt_c = q.get('option_c', '')
+        opt_d = q.get('option_d', '')
 
-            options_data = q.get('options', [])
-            if options_data:
-                for opt in options_data:
-                    label = opt.get('label', '').upper()
-                    if label == 'A': opt_a = opt.get('text', '')
-                    elif label == 'B': opt_b = opt.get('text', '')
-                    elif label == 'C': opt_c = opt.get('text', '')
-                    elif label == 'D': opt_d = opt.get('text', '')
+        options_data = q.get('options', [])
+        if options_data:
+            for opt in options_data:
+                label = opt.get('label', '').upper()
+                if label == 'A': opt_a = opt.get('text', '')
+                elif label == 'B': opt_b = opt.get('text', '')
+                elif label == 'C': opt_c = opt.get('text', '')
+                elif label == 'D': opt_d = opt.get('text', '')
 
-            questions.append({
-                'id': i,
-                'question_text': q.get('text', q.get('question_text', '')),
-                'option_a': opt_a,
-                'option_b': opt_b,
-                'option_c': opt_c,
-                'option_d': opt_d,
-                'image': q.get('image', None)
-            })
-        time_remaining = session.test.duration * 60
-    else:
-        # Bank questions
-        q_objs = Question.objects.filter(
-            category__iexact=session.current_section,
-            module=session.current_module
-        ).order_by('question_number')
-        
-        questions = list(q_objs.values('id', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d'))
-        
-        if not questions:
-            messages.error(request, "Savollar topilmadi. Iltimos, keyinroq urinib ko'ring.")
-            return redirect('user_dashboard')
-            
-        time_remaining = 32 * 60 if session.current_section == 'english' else 35 * 60
+        questions.append({
+            'id': i,
+            'question_text': q.get('text', q.get('question_text', '')),
+            'option_a': opt_a,
+            'option_b': opt_b,
+            'option_c': opt_c,
+            'option_d': opt_d,
+            'image': q.get('image', None)
+        })
+    time_remaining = session.test.duration * 60
 
     existing_answers = ExamAnswer.objects.filter(exam_session=session, category=session.current_section)
     
-    if session.test:
-        answer_dict = {str(ans.question_index): ans.selected_answer for ans in existing_answers if (ans.question_index is not None)}
-    else:
-        answer_dict = {str(ans.question_id): ans.selected_answer for ans in existing_answers}
+    answer_dict = {str(ans.question_index): ans.selected_answer for ans in existing_answers if (ans.question_index is not None)}
     
-    answers = [answer_dict.get(str(q.get('id', i)), None) for i, q in enumerate(questions)]
+    answers = [answer_dict.get(str(i), None) for i in range(len(questions))]
     
-    if session.test:
-        section_title = f"{session.test.title} - {get_module_display_name(session.test.test_type)}"
-    else:
-        section_title = f"{session.current_section.title()} Module {session.current_module}"
+    section_title = f"{session.test.title} - {get_module_display_name(session.test.test_type)}"
     
     return render(request, 'main/exam.html', {
         'exam_session': session,
@@ -398,46 +387,33 @@ def api_save_answer(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         session_id = data.get('session_id')
-        question_id = data.get('question_id') # This is the index for Test-based exams
+        question_id = data.get('question_id')
         answer = data.get('answer')
         
         session = get_object_or_404(ExamSession, id=session_id, user=request.user)
         
-        if session.test:
-            # For specific tests, question_id is the index in the JSON list
-            try:
-                question_index = int(question_id)
-                test_questions = session.test.test_questions
-                if 0 <= question_index < len(test_questions):
-                    q_data = test_questions[question_index]
-                    # Check both possible keys for correct answer
-                    correct_answer = q_data.get('correct_answer', q_data.get('answer', ''))
-                    
-                    exam_answer, created = ExamAnswer.objects.update_or_create(
-                        exam_session=session,
-                        question_index=question_index,
-                        category=session.current_section,
-                        defaults={
-                            'selected_answer': answer,
-                            'is_correct': answer == correct_answer
-                        }
-                    )
-                    return JsonResponse({'success': True})
-            except (ValueError, TypeError):
-                pass
-        else:
-            # Default behavior for bank questions
-            question = get_object_or_404(Question, id=question_id)
-            exam_answer, created = ExamAnswer.objects.update_or_create(
-                exam_session=session,
-                question=question,
-                category=session.current_section,
-                defaults={
-                    'selected_answer': answer,
-                    'is_correct': answer == question.correct_answer
-                }
-            )
-            return JsonResponse({'success': True})
+        if not session.test:
+            return JsonResponse({'success': False, 'error': 'No test associated with session'})
+        
+        try:
+            question_index = int(question_id)
+            test_questions = session.test.test_questions
+            if 0 <= question_index < len(test_questions):
+                q_data = test_questions[question_index]
+                correct_answer = q_data.get('correct_answer', q_data.get('answer', ''))
+                
+                exam_answer, created = ExamAnswer.objects.update_or_create(
+                    exam_session=session,
+                    question_index=question_index,
+                    category=session.current_section,
+                    defaults={
+                        'selected_answer': answer,
+                        'is_correct': answer == correct_answer
+                    }
+                )
+                return JsonResponse({'success': True})
+        except (ValueError, TypeError):
+            pass
             
     return JsonResponse({'success': False})
 
@@ -552,42 +528,7 @@ def api_finish_section(request):
                 session.save()
                 update_user_stats(request.user, session)
                 return JsonResponse({'next_action': 'results'})
-        else:
-            # Bank questions flow (unchanged)
-            if session.current_section == 'english':
-                if session.current_module == 1:
-                    session.english_module1_score = correct_count
-                    session.current_module = 2
-                    session.save()
-                    return JsonResponse({'next_action': 'next_module'})
-                else:
-                    session.english_module2_score = correct_count
-                    session.english_score = calculate_section_score(
-                        session.english_module1_score + session.english_module2_score, 54
-                    )
-                    session.current_section = 'math'
-                    session.current_module = 1
-                    session.status = 'break'
-                    session.save()
-                    return JsonResponse({'next_action': 'break'})
-            else:
-                if session.current_module == 1:
-                    session.math_module1_score = correct_count
-                    session.current_module = 2
-                    session.save()
-                    return JsonResponse({'next_action': 'next_module'})
-                else:
-                    session.math_module2_score = correct_count
-                    session.math_score = calculate_section_score(
-                        session.math_module1_score + session.math_module2_score, 44
-                    )
-                    session.total_score = session.english_score + session.math_score
-                    session.status = 'completed'
-                    session.completed_at = timezone.now()
-                    session.save()
-                    update_user_stats(request.user, session)
-                    return JsonResponse({'next_action': 'results'})
-      
+    
     return JsonResponse({'success': False})
 
 
@@ -607,7 +548,7 @@ def api_start_math(request):
             if math_test:
                 session.test = math_test
             else:
-                session.test = None
+                return JsonResponse({'success': False, 'error': 'Math module not found'})
         
         session.status = 'in_progress'
         session.save()

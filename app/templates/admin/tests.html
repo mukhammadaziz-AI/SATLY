@@ -1142,20 +1142,25 @@ async function loadTests() {
             return;
         }
 
-        // Group tests by title
+        // Group tests by title with all 4 modules
         const groups = {};
         result.data.forEach(test => {
             if (!groups[test.title]) {
-                groups[test.title] = { english: null, math: null };
+                groups[test.title] = { 
+                    english_module1: null, 
+                    english_module2: null,
+                    math_module1: null,
+                    math_module2: null
+                };
             }
-            if (test.category === 'english') groups[test.title].english = test;
-            if (test.category === 'math') groups[test.title].math = test;
+            groups[test.title][test.test_type] = test;
         });
 
         const filteredTitles = Object.keys(groups).filter(title => {
             if (currentCategory === 'all') return true;
-            if (currentCategory === 'english') return groups[title].english !== null;
-            if (currentCategory === 'math') return groups[title].math !== null;
+            const group = groups[title];
+            if (currentCategory === 'english') return group.english_module1 !== null || group.english_module2 !== null;
+            if (currentCategory === 'math') return group.math_module1 !== null || group.math_module2 !== null;
             return true;
         });
 
@@ -1166,8 +1171,11 @@ async function loadTests() {
         
         grid.innerHTML = filteredTitles.map(title => {
             const group = groups[title];
-            const hasEnglish = !!group.english;
-            const hasMath = !!group.math;
+            const hasE1 = !!group.english_module1;
+            const hasE2 = !!group.english_module2;
+            const hasM1 = !!group.math_module1;
+            const hasM2 = !!group.math_module2;
+            const isComplete = hasE1 && hasE2 && hasM1 && hasM2;
             
             return `
                 <div class="test-set-card">
@@ -1175,11 +1183,17 @@ async function loadTests() {
                         <div>
                             <h3 class="test-set-title">${title}</h3>
                             <div class="test-set-status">
-                                <span class="status-badge ${hasEnglish ? 'complete' : 'incomplete'}">
-                                    <i class="fas fa-${hasEnglish ? 'check-circle' : 'circle'}"></i> English
+                                <span class="status-badge ${hasE1 ? 'complete' : 'incomplete'}">
+                                    <i class="fas fa-${hasE1 ? 'check-circle' : 'circle'}"></i> Eng 1
                                 </span>
-                                <span class="status-badge ${hasMath ? 'complete' : 'incomplete'}">
-                                    <i class="fas fa-${hasMath ? 'check-circle' : 'circle'}"></i> Math
+                                <span class="status-badge ${hasE2 ? 'complete' : 'incomplete'}">
+                                    <i class="fas fa-${hasE2 ? 'check-circle' : 'circle'}"></i> Eng 2
+                                </span>
+                                <span class="status-badge ${hasM1 ? 'complete' : 'incomplete'}">
+                                    <i class="fas fa-${hasM1 ? 'check-circle' : 'circle'}"></i> Math 1
+                                </span>
+                                <span class="status-badge ${hasM2 ? 'complete' : 'incomplete'}">
+                                    <i class="fas fa-${hasM2 ? 'check-circle' : 'circle'}"></i> Math 2
                                 </span>
                             </div>
                         </div>
@@ -1195,10 +1209,11 @@ async function loadTests() {
                         <div class="section-column">
                             <div class="section-header">
                                 <h4 class="section-title"><i class="fas fa-book-open"></i> English</h4>
-                                ${!hasEnglish ? `<button class="add-section-btn" onclick="addSpecificTest('${title}', 'english')">Add English</button>` : ''}
+                                <button class="add-section-btn" onclick="addSpecificTest('${title}', 'english')">Add Module</button>
                             </div>
                             <div class="questions-list">
-                                ${hasEnglish ? renderQuestionsList(group.english) : '<p style="color: #64748b; font-size: 0.85rem; text-align: center; padding: 2rem;">English section not added yet.</p>'}
+                                ${hasE1 ? renderModuleInfo(group.english_module1, 'Module 1') : '<p style="color: #f87171; font-size: 0.8rem;">Module 1 missing</p>'}
+                                ${hasE2 ? renderModuleInfo(group.english_module2, 'Module 2') : '<p style="color: #f87171; font-size: 0.8rem;">Module 2 missing</p>'}
                             </div>
                         </div>
 
@@ -1206,13 +1221,16 @@ async function loadTests() {
                         <div class="section-column">
                             <div class="section-header">
                                 <h4 class="section-title"><i class="fas fa-calculator"></i> Math</h4>
-                                ${!hasMath ? `<button class="add-section-btn" onclick="addSpecificTest('${title}', 'math')">Add Math</button>` : ''}
+                                <button class="add-section-btn" onclick="addSpecificTest('${title}', 'math')">Add Module</button>
                             </div>
                             <div class="questions-list">
-                                ${hasMath ? renderQuestionsList(group.math) : '<p style="color: #64748b; font-size: 0.85rem; text-align: center; padding: 2rem;">Math section not added yet.</p>'}
+                                ${hasM1 ? renderModuleInfo(group.math_module1, 'Module 1') : '<p style="color: #f87171; font-size: 0.8rem;">Module 1 missing</p>'}
+                                ${hasM2 ? renderModuleInfo(group.math_module2, 'Module 2') : '<p style="color: #f87171; font-size: 0.8rem;">Module 2 missing</p>'}
                             </div>
                         </div>
                     </div>
+                    
+                    ${isComplete ? '<p style="color: #34d399; text-align: center; margin-top: 1rem; font-weight: 600;"><i class="fas fa-check-circle"></i> Complete - Ready for users</p>' : '<p style="color: #f87171; text-align: center; margin-top: 1rem; font-weight: 600;"><i class="fas fa-exclamation-circle"></i> Incomplete - Add missing modules</p>'}
                 </div>
             `;
         }).join('');
@@ -1221,34 +1239,101 @@ async function loadTests() {
     }
 }
 
-function renderQuestionsList(test) {
-    if (!test.questions || test.questions.length === 0) {
-        // Fallback for when we need to fetch full detail if loadTests only returns summary
-        // But api_tests_list usually returns what's in the DB.
-        // Wait, does api_tests_list return questions? Looking at views.py, it doesn't return questions_list, but Test model has test_questions.
-        // Let's check api_tests_list in views.py again.
-        // It returns questions_count but not test_questions.
-        return `<button class="add-section-btn" style="width: 100%" onclick="editTest(${test.id})">Edit Section / Add Questions</button>`;
-    }
-    
-    return test.questions.map((q, idx) => `
-        <div class="question-row">
+function renderModuleInfo(test, moduleName) {
+    const qCount = test.questions ? test.questions.length : test.questions_count || 0;
+    return `
+        <div class="question-row" style="cursor: pointer;" onclick="editTest(${test.id})">
             <div class="question-info">
-                <span class="question-label">Q${idx + 1}</span>
-                <span class="question-preview">${q.text || q.question_text || ''}</span>
+                <span class="question-label">${moduleName}</span>
+                <span class="question-preview">${qCount} questions • ${test.duration} min</span>
             </div>
             <div class="question-actions">
-                <button class="q-action-btn edit" onclick="editTest(${test.id})"><i class="fas fa-edit"></i></button>
-                <button class="q-action-btn delete" onclick="deleteQuestionFromTest(${test.id}, ${idx})"><i class="fas fa-times"></i></button>
+                <button class="q-action-btn edit"><i class="fas fa-edit"></i></button>
             </div>
         </div>
-    `).join('');
+    `;
 }
 
 function addSpecificTest(title, category) {
     selectedSubject = category;
+    closeAllModals();
+    
+    const moduleContent = document.getElementById('module-selector-content');
+    const titleEl = document.getElementById('module-selector-title');
+    
+    if (category === 'english') {
+        titleEl.textContent = 'Select English Module';
+        moduleContent.innerHTML = `
+            <div class="module-card" onclick="selectModuleForTitle('${title}', 'english_module1')">
+                <div class="module-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <h4>Module 1</h4>
+                <p>Reading & Writing</p>
+                <span class="badge-info">27 Questions • 32 min</span>
+            </div>
+            <div class="module-card" onclick="selectModuleForTitle('${title}', 'english_module2')">
+                <div class="module-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <i class="fas fa-pen-fancy"></i>
+                </div>
+                <h4>Module 2</h4>
+                <p>Reading & Writing</p>
+                <span class="badge-info">27 Questions • 32 min</span>
+            </div>
+        `;
+        maxQuestions = 27;
+    } else {
+        titleEl.textContent = 'Select Math Module';
+        moduleContent.innerHTML = `
+            <div class="module-card" onclick="selectModuleForTitle('${title}', 'math_module1')">
+                <div class="module-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                    <i class="fas fa-square-root-alt"></i>
+                </div>
+                <h4>Module 1</h4>
+                <p>No Calculator Section</p>
+                <span class="badge-info">22 Questions • 35 min</span>
+            </div>
+            <div class="module-card" onclick="selectModuleForTitle('${title}', 'math_module2')">
+                <div class="module-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <h4>Module 2</h4>
+                <p>Calculator Section</p>
+                <span class="badge-info">22 Questions • 35 min</span>
+            </div>
+        `;
+        maxQuestions = 22;
+    }
+    
+    document.getElementById('module-selector-modal').classList.add('show');
+}
+
+function selectModuleForTitle(title, module) {
+    selectedModule = module;
+    selectedSubject = module.startsWith('english') ? 'english' : 'math';
+    closeAllModals();
+    
+    document.getElementById('modal-title').textContent = `Add ${selectedSubject.charAt(0).toUpperCase() + selectedSubject.slice(1)} Test - ${getModuleName(module)}`;
+    document.getElementById('test-form').reset();
+    document.getElementById('test-id').value = '';
     document.getElementById('test-title').value = title;
-    selectSubject(category);
+    document.getElementById('test-category').value = selectedSubject;
+    document.getElementById('test-module').value = module;
+    document.getElementById('questions-container').innerHTML = '';
+    questionCount = 0;
+    
+    if (selectedSubject === 'math') {
+        maxQuestions = 22;
+        document.getElementById('test-duration').value = 35;
+    } else {
+        maxQuestions = 27;
+        document.getElementById('test-duration').value = 32;
+    }
+    
+    document.getElementById('max-questions').textContent = maxQuestions;
+    updateQuestionCount();
+    
+    document.getElementById('test-modal').classList.add('show');
 }
 
 async function deleteTestSet(title) {
