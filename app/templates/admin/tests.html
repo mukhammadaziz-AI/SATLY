@@ -1513,7 +1513,7 @@ async function saveTest(e) {
     });
     
     const data = {
-        title: document.getElementById('test-title').value,
+        title: document.getElementById('test-title').value.trim(),
         description: document.getElementById('test-description').value,
         category: document.getElementById('test-category').value,
         test_type: document.getElementById('test-module').value,

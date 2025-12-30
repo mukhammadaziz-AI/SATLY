@@ -944,18 +944,33 @@ def api_tests_list(request):
 @require_http_methods(["POST"])
 def api_test_create(request):
     data = json.loads(request.body)
+    title = data['title'].strip()
+    test_type = data['test_type']
     
-    test = Test.objects.create(
-        title=data['title'],
-        description=data.get('description', ''),
-        category=data['category'],
-        test_type=data['test_type'],
-        difficulty=data.get('difficulty', 'medium'),
-        duration=data['duration'],
-        questions_count=data.get('questions_count', 0),
-        test_questions=data.get('questions', []),
-        is_active=data.get('is_active', True),
-    )
+    # Try to find existing test to update if it's the same title and type
+    test = Test.objects.filter(title=title, test_type=test_type).first()
+    
+    if test:
+        test.description = data.get('description', test.description)
+        test.category = data['category']
+        test.difficulty = data.get('difficulty', test.difficulty)
+        test.duration = data['duration']
+        test.questions_count = data.get('questions_count', 0)
+        test.test_questions = data.get('questions', [])
+        test.is_active = data.get('is_active', True)
+        test.save()
+    else:
+        test = Test.objects.create(
+            title=title,
+            description=data.get('description', ''),
+            category=data['category'],
+            test_type=test_type,
+            difficulty=data.get('difficulty', 'medium'),
+            duration=data['duration'],
+            questions_count=data.get('questions_count', 0),
+            test_questions=data.get('questions', []),
+            is_active=data.get('is_active', True),
+        )
     
     # Check completeness
     same_title = Test.objects.filter(title=test.title)
