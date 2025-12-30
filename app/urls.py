@@ -49,6 +49,7 @@ urlpatterns = [
     
     path('api/tests/', views.api_tests_list, name='api_tests_list'),
     path('api/tests/create/', views.api_test_create, name='api_test_create'),
+    path('api/tests/set-create/', views.api_test_set_create, name='api_test_set_create'),
     path('api/tests/<int:test_id>/', views.api_test_detail, name='api_test_detail'),
     path('api/tests/<int:test_id>/delete/', views.api_test_delete, name='api_test_delete'),
     

@@ -992,7 +992,7 @@ def api_test_create(request):
         )
     
     # Check completeness
-    same_title = Test.objects.filter(title=test.title)
+    same_title = Test.objects.filter(title__iexact=test.title.strip())
     has_e1 = same_title.filter(test_type='english_module1').exists()
     has_e2 = same_title.filter(test_type='english_module2').exists()
     has_m1 = same_title.filter(test_type='math_module1').exists()
@@ -1005,6 +1005,63 @@ def api_test_create(request):
         'id': test.id,
         'is_complete': is_complete,
         'message': 'Test saved successfully.' if is_complete else 'Test saved, but set is still incomplete.'
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_test_set_create(request):
+    """Create or update a full set of 4 modules at once"""
+    data = json.loads(request.body)
+    title = data.get('title', '').strip()
+    modules_data = data.get('modules', {}) # Dictionary with module types as keys
+    
+    if not title:
+        return JsonResponse({'success': False, 'message': 'Test title is required.'})
+    
+    created_ids = []
+    
+    # Module types to ensure we handle all 4
+    module_types = ['english_module1', 'english_module2', 'math_module1', 'math_module2']
+    
+    for m_type in module_types:
+        m_data = modules_data.get(m_type)
+        if not m_data:
+            continue
+            
+        category = 'english' if 'english' in m_type else 'math'
+        
+        # Try to find existing test to update
+        test = Test.objects.filter(title__iexact=title, test_type=m_type).first()
+        
+        if test:
+            test.title = title
+            test.description = data.get('description', test.description)
+            test.category = category
+            test.difficulty = data.get('difficulty', test.difficulty)
+            test.duration = m_data.get('duration', test.duration)
+            test.questions_count = len(m_data.get('questions', []))
+            test.test_questions = m_data.get('questions', [])
+            test.is_active = True
+            test.save()
+        else:
+            test = Test.objects.create(
+                title=title,
+                description=data.get('description', ''),
+                category=category,
+                test_type=m_type,
+                difficulty=data.get('difficulty', 'medium'),
+                duration=m_data.get('duration', 32 if category == 'english' else 35),
+                questions_count=len(m_data.get('questions', [])),
+                test_questions=m_data.get('questions', []),
+                is_active=True,
+            )
+        created_ids.append(test.id)
+    
+    return JsonResponse({
+        'success': True,
+        'message': f'Successfully saved {len(created_ids)} modules for "{title}".',
+        'ids': created_ids
     })
 
 
