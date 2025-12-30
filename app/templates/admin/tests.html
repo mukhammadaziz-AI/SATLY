@@ -48,7 +48,7 @@
     .tests-header {
         position: relative;
         z-index: 2;
-        margin-bottom: 3rem;
+        margin-bottom: 2rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -62,7 +62,7 @@
 
     .tests-title {
         font-family: 'Syne', sans-serif;
-        font-size: 3.5rem;
+        font-size: 3rem;
         font-weight: 800;
         background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #ec4899 100%);
         -webkit-background-clip: text;
@@ -74,19 +74,54 @@
 
     .tests-subtitle {
         font-family: 'Space Mono', monospace;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         color: #94a3b8;
         letter-spacing: 1px;
         text-transform: uppercase;
     }
 
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+    .search-box input {
+        padding: 0.85rem 1rem 0.85rem 2.75rem;
+        background: rgba(15, 23, 42, 0.6);
+        border: 2px solid rgba(148, 163, 184, 0.2);
+        border-radius: 12px;
+        color: #f1f5f9;
+        font-size: 0.9rem;
+        width: 280px;
+        transition: all 0.3s;
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: #60a5fa;
+        background: rgba(15, 23, 42, 0.8);
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+    }
+
     .add-test-btn {
-        padding: 1rem 2rem;
+        padding: 0.85rem 1.75rem;
         background: linear-gradient(135deg, #3b82f6, #8b5cf6);
         border: none;
         border-radius: 12px;
         font-family: 'Syne', sans-serif;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         font-weight: 600;
         color: #fff;
         cursor: pointer;
@@ -101,22 +136,76 @@
         box-shadow: 0 12px 40px rgba(59, 130, 246, 0.4);
     }
 
-    .category-tabs {
-        display: flex;
-        gap: 1rem;
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
         margin-bottom: 2rem;
         position: relative;
         z-index: 2;
     }
 
+    .stat-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 20px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+    .stat-card:hover {
+        border-color: rgba(96, 165, 250, 0.4);
+        transform: translateY(-4px);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.25rem;
+    }
+
+    .stat-icon.blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    .stat-icon.green { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .stat-icon.purple { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+    .stat-icon.orange { background: rgba(249, 115, 22, 0.2); color: #fb923c; }
+
+    .stat-value {
+        font-family: 'Syne', sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #f1f5f9;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin-top: 0.25rem;
+    }
+
+    .category-tabs {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+        position: relative;
+        z-index: 2;
+        flex-wrap: wrap;
+    }
+
     .tab-btn {
-        padding: 0.75rem 1.75rem;
+        padding: 0.65rem 1.5rem;
         background: rgba(15, 23, 42, 0.6);
         backdrop-filter: blur(20px);
         border: 2px solid rgba(148, 163, 184, 0.2);
-        border-radius: 12px;
+        border-radius: 10px;
         font-family: 'Space Mono', monospace;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-weight: 600;
         color: #94a3b8;
         cursor: pointer;
@@ -138,8 +227,8 @@
 
     .tests-grid {
         display: grid;
-        grid-template-columns: 1fr;
-        gap: 2.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 1.5rem;
         position: relative;
         z-index: 2;
     }
@@ -148,198 +237,197 @@
         background: rgba(15, 23, 42, 0.6);
         backdrop-filter: blur(20px);
         border: 1px solid rgba(148, 163, 184, 0.2);
-        border-radius: 32px;
-        padding: 2.5rem;
+        border-radius: 24px;
+        padding: 1.75rem;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
+        overflow: hidden;
+    }
+
+    .test-set-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .test-set-card:hover::before {
+        opacity: 1;
+    }
+
+    .test-set-card:hover {
+        border-color: rgba(96, 165, 250, 0.4);
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     }
 
     .test-set-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        margin-bottom: 1.25rem;
     }
 
     .test-set-title {
         font-family: 'Syne', sans-serif;
-        font-size: 2rem;
-        font-weight: 800;
+        font-size: 1.4rem;
+        font-weight: 700;
         color: #f1f5f9;
-        margin: 0;
+        margin: 0 0 0.5rem 0;
     }
 
-    .test-set-status {
+    .test-set-meta {
         display: flex;
-        gap: 1rem;
-    }
-
-    .status-badge {
-        padding: 0.5rem 1rem;
-        border-radius: 12px;
-        font-family: 'Space Mono', monospace;
-        font-size: 0.75rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .status-badge.complete {
-        background: rgba(16, 185, 129, 0.1);
-        color: #34d399;
-        border: 1px solid rgba(52, 211, 153, 0.3);
-    }
-
-    .status-badge.incomplete {
-        background: rgba(239, 68, 68, 0.1);
-        color: #f87171;
-        border: 1px solid rgba(248, 113, 113, 0.3);
-    }
-
-    .sections-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
-    }
-
-    .section-column {
-        background: rgba(30, 41, 59, 0.3);
-        border-radius: 24px;
-        padding: 1.5rem;
-        border: 1px solid rgba(148, 163, 184, 0.1);
-    }
-
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-
-    .section-title {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #cbd5e1;
-        display: flex;
-        align-items: center;
         gap: 0.75rem;
+        flex-wrap: wrap;
     }
 
-    .section-title i {
-        color: #60a5fa;
-    }
-
-    .add-section-btn {
-        padding: 0.6rem 1.2rem;
-        background: rgba(59, 130, 246, 0.15);
-        border: 1px solid rgba(96, 165, 250, 0.3);
-        border-radius: 10px;
-        color: #60a5fa;
+    .meta-tag {
+        padding: 0.35rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
         font-weight: 600;
-        font-size: 0.85rem;
-        cursor: pointer;
-        transition: all 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
-    .add-section-btn:hover {
-        background: #3b82f6;
-        color: white;
-    }
+    .meta-tag.difficulty-easy { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .meta-tag.difficulty-medium { background: rgba(249, 115, 22, 0.15); color: #fb923c; }
+    .meta-tag.difficulty-hard { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+    .meta-tag.questions { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    .meta-tag.duration { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
 
-    .questions-list {
+    .test-actions-main {
         display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        max-height: 300px;
-        overflow-y: auto;
-        padding-right: 0.5rem;
+        gap: 0.5rem;
     }
 
-    .question-row {
-        background: rgba(15, 23, 42, 0.4);
+    .modules-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .module-item {
+        background: rgba(30, 41, 59, 0.4);
         border: 1px solid rgba(148, 163, 184, 0.1);
         border-radius: 12px;
-        padding: 1rem;
+        padding: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .module-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .module-icon.english { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+    .module-icon.math { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .module-icon.missing { background: rgba(239, 68, 68, 0.1); color: #f87171; }
+
+    .module-info {
+        flex: 1;
+    }
+
+    .module-name {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #cbd5e1;
+    }
+
+    .module-stats {
+        font-size: 0.7rem;
+        color: #64748b;
+    }
+
+    .module-status {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+
+    .module-status.complete { background: #34d399; }
+    .module-status.missing { background: #f87171; }
+
+    .test-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        transition: all 0.2s;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(148, 163, 184, 0.1);
     }
 
-    .question-row:hover {
-        border-color: rgba(96, 165, 250, 0.3);
-        background: rgba(15, 23, 42, 0.6);
-    }
-
-    .question-info {
+    .completion-badge {
         display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .question-label {
-        font-family: 'Space Mono', monospace;
-        font-size: 0.75rem;
-        color: #60a5fa;
-    }
-
-    .question-preview {
-        font-size: 0.9rem;
-        color: #94a3b8;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 200px;
-    }
-
-    .question-actions {
-        display: flex;
+        align-items: center;
         gap: 0.5rem;
+        padding: 0.4rem 0.85rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .completion-badge.complete {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+    }
+
+    .completion-badge.incomplete {
+        background: rgba(249, 115, 22, 0.15);
+        color: #fb923c;
+    }
+
+    .test-date {
+        font-size: 0.75rem;
+        color: #64748b;
     }
 
     .q-action-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         border: none;
         cursor: pointer;
         transition: all 0.2s;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
     }
 
-    .q-action-btn.edit {
-        background: rgba(59, 130, 246, 0.1);
-        color: #60a5fa;
-    }
+    .q-action-btn.edit { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    .q-action-btn.preview { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+    .q-action-btn.duplicate { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .q-action-btn.delete { background: rgba(239, 68, 68, 0.15); color: #f87171; }
 
-    .q-action-btn.delete {
-        background: rgba(239, 68, 68, 0.1);
-        color: #f87171;
-    }
-
-    .q-action-btn:hover {
-        transform: scale(1.1);
-    }
-
+    .q-action-btn:hover { transform: scale(1.1); }
     .q-action-btn.edit:hover { background: #3b82f6; color: white; }
+    .q-action-btn.preview:hover { background: #8b5cf6; color: white; }
+    .q-action-btn.duplicate:hover { background: #10b981; color: white; }
     .q-action-btn.delete:hover { background: #ef4444; color: white; }
 
-    .test-actions-main {
-        display: flex;
-        gap: 1rem;
+    @media (max-width: 1024px) {
+        .stats-row { grid-template-columns: repeat(2, 1fr); }
+        .tests-grid { grid-template-columns: 1fr; }
     }
 
-    @media (max-width: 1024px) {
-        .sections-container {
-            grid-template-columns: 1fr;
-        }
+    @media (max-width: 768px) {
+        .tests-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+        .header-actions { width: 100%; flex-direction: column; }
+        .search-box input { width: 100%; }
     }
 
     .loading-state, .no-data {
@@ -351,6 +439,12 @@
         font-size: 1.2rem;
     }
 
+    .no-data i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+
     .modal {
         display: none;
         position: fixed;
@@ -358,11 +452,12 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(0, 0, 0, 0.8);
         backdrop-filter: blur(10px);
         z-index: 1000;
         align-items: center;
         justify-content: center;
+        padding: 1rem;
     }
 
     .modal.show {
@@ -372,42 +467,85 @@
     .modal-content {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         border: 1px solid rgba(148, 163, 184, 0.2);
-        border-radius: 28px;
-        width: 95%;
-        max-width: 1100px;
-        max-height: 95vh;
+        border-radius: 24px;
+        width: 100%;
+        max-width: 1000px;
+        max-height: 90vh;
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+        from { opacity: 0; transform: scale(0.95) translateY(20px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+        background: rgba(15, 23, 42, 0.4);
+    }
+
+    .modal-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #f1f5f9;
+        margin: 0;
+    }
+
+    .close-modal {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(239, 68, 68, 0.15);
+        border: none;
+        color: #f87171;
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .close-modal:hover {
+        background: #ef4444;
+        color: white;
     }
 
     .modal-body {
         overflow-y: auto;
-        padding: 0;
         flex: 1;
     }
 
     .test-tabs {
         display: flex;
-        background: rgba(15, 23, 42, 0.4);
-        padding: 0.5rem 1rem 0;
+        background: rgba(15, 23, 42, 0.6);
+        padding: 0 1.5rem;
         border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-        gap: 0.5rem;
+        gap: 0.25rem;
+        overflow-x: auto;
     }
 
     .test-tab-btn {
-        padding: 1rem 1.5rem;
+        padding: 1rem 1.25rem;
         background: transparent;
         border: none;
         border-bottom: 3px solid transparent;
         color: #94a3b8;
         font-family: 'Syne', sans-serif;
-        font-weight: 700;
+        font-weight: 600;
+        font-size: 0.85rem;
         cursor: pointer;
         transition: all 0.3s;
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        white-space: nowrap;
+        position: relative;
     }
 
     .test-tab-btn:hover {
@@ -420,108 +558,69 @@
         border-bottom-color: #60a5fa;
     }
 
-    .test-tab-btn i {
-        font-size: 0.9rem;
+    .test-tab-btn .tab-count {
+        background: rgba(96, 165, 250, 0.2);
+        color: #60a5fa;
+        padding: 0.15rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-family: 'Space Mono', monospace;
+    }
+
+    .test-tab-btn.active .tab-count {
+        background: #3b82f6;
+        color: white;
     }
 
     .tab-content {
         display: none;
-        padding: 2.5rem;
+        padding: 1.5rem 2rem;
     }
 
     .tab-content.active {
         display: block;
     }
 
-    .subject-selector, .module-selector {
+    .form-section {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .form-row {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-        padding: 2.5rem;
-    }
-
-    .subject-card, .module-card {
-        background: rgba(30, 41, 59, 0.4);
-        border: 2px solid rgba(148, 163, 184, 0.2);
-        border-radius: 20px;
-        padding: 2rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .subject-card:hover, .module-card:hover {
-        border-color: #60a5fa;
-        background: rgba(59, 130, 246, 0.1);
-        transform: translateY(-4px);
-    }
-
-    .subject-icon, .module-icon {
-        width: 70px;
-        height: 70px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1.5rem;
-        color: white;
-        font-size: 1.8rem;
-    }
-
-    .subject-card h4, .module-card h4 {
-        font-family: 'Syne', sans-serif;
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #f1f5f9;
-        margin-bottom: 0.5rem;
-    }
-
-    .subject-card p, .module-card p {
-        font-size: 0.9rem;
-        color: #94a3b8;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 1.25rem;
         margin-bottom: 1rem;
     }
 
-    .badge-info {
-        display: inline-block;
-        background: rgba(59, 130, 246, 0.15);
-        color: #60a5fa;
-        padding: 0.5rem 1rem;
-        border-radius: 10px;
-        font-family: 'Space Mono', monospace;
-        font-size: 0.75rem;
-        font-weight: 700;
-        border: 1px solid rgba(96, 165, 250, 0.3);
-    }
-
-    #test-form {
-        padding: 2.5rem;
+    .form-row.two-col {
+        grid-template-columns: 1fr 1fr;
     }
 
     .form-group {
-        margin-bottom: 1.5rem;
+        margin-bottom: 0;
     }
 
     .form-group label {
         display: block;
         font-family: 'Space Mono', monospace;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: #94a3b8;
         text-transform: uppercase;
         letter-spacing: 1px;
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.5rem;
     }
 
     .form-group input,
     .form-group select,
     .form-group textarea {
         width: 100%;
-        padding: 1rem;
+        padding: 0.85rem 1rem;
         background: rgba(30, 41, 59, 0.6);
         border: 2px solid rgba(148, 163, 184, 0.2);
-        border-radius: 12px;
+        border-radius: 10px;
         font-family: 'Karla', sans-serif;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         color: #f1f5f9;
         transition: all 0.3s ease;
     }
@@ -532,122 +631,185 @@
         outline: none;
         border-color: #60a5fa;
         background: rgba(30, 41, 59, 0.8);
-        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
     }
 
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
+    .form-group small {
+        display: block;
+        color: #64748b;
+        font-size: 0.7rem;
+        margin-top: 0.35rem;
     }
 
     .questions-section {
-        background: rgba(30, 41, 59, 0.4);
+        background: rgba(30, 41, 59, 0.3);
         border-radius: 16px;
-        padding: 2rem;
-        margin: 2rem 0;
-        border: 1px solid rgba(148, 163, 184, 0.15);
+        padding: 1.5rem;
+        border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .questions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
     }
 
     .questions-header h4 {
         font-family: 'Syne', sans-serif;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         color: #f1f5f9;
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        margin-bottom: 1.5rem;
+        margin: 0;
     }
 
-    #question-count-badge {
+    .q-count-badge {
         font-family: 'Space Mono', monospace;
         font-weight: 400;
+        font-size: 0.85rem;
         color: #94a3b8;
     }
 
-    #questions-container {
+    .progress-bar {
+        height: 6px;
+        background: rgba(148, 163, 184, 0.2);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+
+    .questions-container-list {
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 1rem;
         max-height: 400px;
         overflow-y: auto;
         padding-right: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .questions-container-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .questions-container-list::-webkit-scrollbar-track {
+        background: rgba(148, 163, 184, 0.1);
+        border-radius: 3px;
+    }
+
+    .questions-container-list::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.3);
+        border-radius: 3px;
     }
 
     .question-item {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(148, 163, 184, 0.2);
-        border-radius: 16px;
-        padding: 1.5rem;
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 14px;
+        padding: 1.25rem;
+        transition: all 0.2s;
+    }
+
+    .question-item:hover {
+        border-color: rgba(96, 165, 250, 0.3);
     }
 
     .question-item-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1rem;
+        margin-bottom: 0.85rem;
     }
 
     .question-number {
         font-family: 'Syne', sans-serif;
         font-weight: 700;
         color: #60a5fa;
-        font-size: 1rem;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .question-number::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: #60a5fa;
+        border-radius: 50%;
     }
 
     .delete-question-btn {
-        background: rgba(239, 68, 68, 0.15);
-        border: 1px solid rgba(248, 113, 113, 0.3);
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(248, 113, 113, 0.2);
         color: #f87171;
-        padding: 0.5rem;
+        padding: 0.4rem 0.6rem;
         border-radius: 8px;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
     }
 
     .delete-question-btn:hover {
-        background: rgba(239, 68, 68, 0.3);
+        background: rgba(239, 68, 68, 0.25);
+        border-color: #f87171;
     }
 
     .question-text-input {
         width: 100%;
-        padding: 1rem;
-        background: rgba(30, 41, 59, 0.6);
-        border: 2px solid rgba(148, 163, 184, 0.2);
-        border-radius: 12px;
+        padding: 0.85rem;
+        background: rgba(30, 41, 59, 0.5);
+        border: 2px solid rgba(148, 163, 184, 0.15);
+        border-radius: 10px;
         font-family: 'Karla', sans-serif;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         color: #f1f5f9;
-        margin-bottom: 1rem;
+        margin-bottom: 0.85rem;
         resize: vertical;
+        min-height: 70px;
     }
 
     .question-text-input:focus {
         outline: none;
         border-color: #60a5fa;
-        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
     }
 
     .image-upload-section {
-        margin-bottom: 1rem;
-        padding: 1rem;
-        background: rgba(30, 41, 59, 0.4);
-        border-radius: 12px;
-        border: 2px dashed rgba(148, 163, 184, 0.3);
+        margin-bottom: 0.85rem;
+        padding: 0.85rem;
+        background: rgba(30, 41, 59, 0.3);
+        border-radius: 10px;
+        border: 2px dashed rgba(148, 163, 184, 0.25);
+        transition: all 0.2s;
+    }
+
+    .image-upload-section:hover {
+        border-color: rgba(96, 165, 250, 0.4);
     }
 
     .image-upload-section.has-image {
         border-style: solid;
         border-color: #34d399;
+        background: rgba(16, 185, 129, 0.05);
     }
 
     .image-upload-label {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.6rem;
         cursor: pointer;
         color: #94a3b8;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 
     .image-upload-label i {
@@ -659,63 +821,80 @@
     }
 
     .image-preview {
-        margin-top: 1rem;
+        margin-top: 0.75rem;
         position: relative;
+        display: inline-block;
     }
 
     .image-preview img {
-        max-width: 200px;
-        max-height: 150px;
-        border-radius: 12px;
+        max-width: 180px;
+        max-height: 120px;
+        border-radius: 10px;
+        border: 2px solid rgba(148, 163, 184, 0.2);
     }
 
     .remove-image-btn {
         position: absolute;
-        top: -8px;
-        right: -8px;
+        top: -10px;
+        right: -10px;
         background: #ef4444;
         color: white;
         border: none;
         border-radius: 50%;
-        width: 28px;
-        height: 28px;
+        width: 26px;
+        height: 26px;
         cursor: pointer;
-        font-size: 0.85rem;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .options-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
+        gap: 0.6rem;
     }
 
     .option-item {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.6rem;
+        background: rgba(30, 41, 59, 0.3);
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        transition: all 0.2s;
+    }
+
+    .option-item:has(.option-radio:checked) {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(52, 211, 153, 0.3);
     }
 
     .option-radio {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
         accent-color: #34d399;
+        cursor: pointer;
     }
 
     .option-label {
         font-family: 'Syne', sans-serif;
         font-weight: 700;
         color: #cbd5e1;
-        min-width: 30px;
+        min-width: 24px;
+        font-size: 0.85rem;
     }
 
     .option-input {
         flex: 1;
-        padding: 0.75rem;
-        background: rgba(30, 41, 59, 0.6);
-        border: 2px solid rgba(148, 163, 184, 0.2);
-        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 6px;
         font-family: 'Karla', sans-serif;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         color: #f1f5f9;
     }
 
@@ -726,61 +905,120 @@
 
     .add-question-btn {
         width: 100%;
-        margin-top: 1rem;
-        padding: 1rem;
-        background: rgba(59, 130, 246, 0.15);
+        padding: 0.85rem;
+        background: rgba(59, 130, 246, 0.1);
         border: 2px dashed rgba(96, 165, 250, 0.3);
-        border-radius: 12px;
+        border-radius: 10px;
         font-family: 'Syne', sans-serif;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         font-weight: 600;
         color: #60a5fa;
         cursor: pointer;
         transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
     }
 
     .add-question-btn:hover {
-        background: rgba(59, 130, 246, 0.25);
+        background: rgba(59, 130, 246, 0.2);
         border-color: #60a5fa;
     }
 
     .form-actions {
         display: flex;
-        justify-content: flex-end;
-        gap: 1rem;
-        padding-top: 2rem;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 2rem;
+        background: rgba(15, 23, 42, 0.6);
         border-top: 1px solid rgba(148, 163, 184, 0.15);
     }
 
+    .form-actions-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .save-indicator {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+
+    .form-actions-right {
+        display: flex;
+        gap: 0.75rem;
+    }
+
     .form-actions button {
-        padding: 1rem 2rem;
-        border-radius: 12px;
+        padding: 0.85rem 1.5rem;
+        border-radius: 10px;
         font-family: 'Syne', sans-serif;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
-    .form-actions .btn-secondary {
+    .btn-secondary {
         background: rgba(100, 116, 139, 0.2);
         border: 1px solid rgba(148, 163, 184, 0.3);
         color: #94a3b8;
     }
 
-    .form-actions .btn-secondary:hover {
+    .btn-secondary:hover {
         background: rgba(100, 116, 139, 0.3);
+        color: #f1f5f9;
     }
 
-    .form-actions .btn-primary {
+    .btn-primary {
         background: linear-gradient(135deg, #3b82f6, #8b5cf6);
         border: none;
         color: #fff;
     }
 
-    .form-actions .btn-primary:hover {
+    .btn-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 12px 40px rgba(59, 130, 246, 0.4);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .toast {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        z-index: 2000;
+        animation: toastSlide 0.3s ease-out;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .toast.success {
+        background: rgba(16, 185, 129, 0.9);
+        color: white;
+    }
+
+    .toast.error {
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+    }
+
+    @keyframes toastSlide {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 </style>
 
@@ -788,115 +1026,114 @@
     <div class="tests-header">
         <div>
             <h1 class="tests-title">Test Management</h1>
-            <p class="tests-subtitle">Create & Manage SAT Tests</p>
+            <p class="tests-subtitle">Create & Manage SAT Practice Tests</p>
         </div>
-        <button class="add-test-btn" onclick="openSubjectSelector()">
-            <i class="fas fa-plus"></i> Add New Test
-        </button>
+        <div class="header-actions">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="Search tests..." oninput="filterTests()">
+            </div>
+            <button class="add-test-btn" onclick="openTestModal()">
+                <i class="fas fa-plus"></i> New Test Set
+            </button>
+        </div>
+    </div>
+
+    <div class="stats-row" id="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-clipboard-list"></i></div>
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total Test Sets</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-value" id="stat-complete">0</div>
+            <div class="stat-label">Complete Sets</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="fas fa-question-circle"></i></div>
+            <div class="stat-value" id="stat-questions">0</div>
+            <div class="stat-label">Total Questions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fas fa-users"></i></div>
+            <div class="stat-value" id="stat-completions">0</div>
+            <div class="stat-label">Total Completions</div>
+        </div>
     </div>
 
     <div class="category-tabs">
         <button class="tab-btn active" data-category="all">All Tests</button>
+        <button class="tab-btn" data-category="complete">Complete Only</button>
+        <button class="tab-btn" data-category="incomplete">Incomplete</button>
     </div>
 
     <div class="tests-grid" id="tests-grid">
-        <div class="loading-state">Loading tests...</div>
-    </div>
-</div>
-
-<div id="subject-selector-modal" class="modal">
-    <div class="modal-content" style="max-width: 600px;">
-        <div class="modal-header">
-            <h3 class="modal-title">Select Subject</h3>
-            <button class="close-modal">&times;</button>
-        </div>
-        <div class="subject-selector">
-            <div class="subject-card" onclick="selectSubject('english')">
-                <div class="subject-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <i class="fas fa-book-open"></i>
-                </div>
-                <h4>English</h4>
-                <p>Reading & Writing modules</p>
-                <span class="badge-info">2 Modules • 54 Questions</span>
-            </div>
-            <div class="subject-card" onclick="selectSubject('math')">
-                <div class="subject-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-                    <i class="fas fa-calculator"></i>
-                </div>
-                <h4>Math</h4>
-                <p>Module 1 & Module 2</p>
-                <span class="badge-info">2 Modules • 44 Questions</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="module-selector-modal" class="modal">
-    <div class="modal-content" style="max-width: 600px;">
-        <div class="modal-header">
-            <h3 id="module-selector-title" class="modal-title">Select Module</h3>
-            <button class="close-modal">&times;</button>
-        </div>
-        <div class="module-selector" id="module-selector-content">
-        </div>
+        <div class="loading-state"><i class="fas fa-spinner fa-spin"></i> Loading tests...</div>
     </div>
 </div>
 
 <div id="test-modal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 id="modal-title" class="modal-title">Create / Edit Test Set</h3>
-            <button class="close-modal">&times;</button>
+            <h3 id="modal-title" class="modal-title">Create New Test Set</h3>
+            <button class="close-modal" onclick="closeAllModals()">&times;</button>
         </div>
-        <form id="test-form">
-            <div class="modal-body">
-                <div style="padding: 2.5rem 2.5rem 0;">
-                    <input type="hidden" id="test-id">
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Test Set Name (Shared for all 4 modules)</label>
-                            <input type="text" id="test-title" required placeholder="e.g., Practice Test 1" list="existing-titles">
-                            <datalist id="existing-titles"></datalist>
-                            <small style="color: #94a3b8; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
-                                Barcha 4ta modul (Eng 1, 2, Math 1, 2) mana shu nom ostida yig'iladi.
-                            </small>
-                        </div>
-                        <div class="form-group">
-                            <label>Global Difficulty</label>
-                            <select id="test-difficulty">
-                                <option value="easy">Easy</option>
-                                <option value="medium" selected>Medium</option>
-                                <option value="hard">Hard</option>
-                            </select>
-                        </div>
+        <form id="test-form" onsubmit="saveAllModules(event)">
+            <div class="form-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Test Set Name</label>
+                        <input type="text" id="test-title" required placeholder="e.g., Practice Test 1">
+                        <small>This name groups all 4 modules together</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Difficulty</label>
+                        <select id="test-difficulty">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="test-status">
+                            <option value="true">Active</option>
+                            <option value="false">Draft</option>
+                        </select>
                     </div>
                 </div>
+            </div>
 
+            <div class="modal-body">
                 <div class="test-tabs">
                     <button type="button" class="test-tab-btn active" data-tab="english_module1" onclick="switchTab('english_module1')">
-                        <i class="fas fa-book-open"></i> Eng 1
+                        <i class="fas fa-book-open"></i> English 1
+                        <span class="tab-count" id="tabcount_english_module1">0/27</span>
                     </button>
                     <button type="button" class="test-tab-btn" data-tab="english_module2" onclick="switchTab('english_module2')">
-                        <i class="fas fa-pen-fancy"></i> Eng 2
+                        <i class="fas fa-pen-fancy"></i> English 2
+                        <span class="tab-count" id="tabcount_english_module2">0/27</span>
                     </button>
                     <button type="button" class="test-tab-btn" data-tab="math_module1" onclick="switchTab('math_module1')">
                         <i class="fas fa-calculator"></i> Math 1
+                        <span class="tab-count" id="tabcount_math_module1">0/22</span>
                     </button>
                     <button type="button" class="test-tab-btn" data-tab="math_module2" onclick="switchTab('math_module2')">
                         <i class="fas fa-square-root-alt"></i> Math 2
+                        <span class="tab-count" id="tabcount_math_module2">0/22</span>
                     </button>
                 </div>
 
                 <div id="english_module1_tab" class="tab-content active">
-                    <div class="form-row">
+                    <div class="form-row two-col">
                         <div class="form-group">
-                            <label>Module Duration (min)</label>
-                            <input type="number" class="module-duration" id="dur_english_module1" value="32">
+                            <label>Duration (minutes)</label>
+                            <input type="number" id="dur_english_module1" value="32" min="1" max="120">
                         </div>
                         <div class="form-group">
-                            <label>Status</label>
-                            <select class="module-active" id="active_english_module1">
+                            <label>Module Status</label>
+                            <select id="active_english_module1">
                                 <option value="true">Active</option>
                                 <option value="false">Inactive</option>
                             </select>
@@ -904,24 +1141,25 @@
                     </div>
                     <div class="questions-section">
                         <div class="questions-header">
-                            <h4><i class="fas fa-list-ol"></i> English Module 1 Questions <span class="q-count-badge" id="count_english_module1">(0/27)</span></h4>
+                            <h4><i class="fas fa-list-ol"></i> Questions <span class="q-count-badge" id="count_english_module1">(0/27)</span></h4>
                         </div>
+                        <div class="progress-bar"><div class="progress-fill" id="progress_english_module1" style="width: 0%"></div></div>
                         <div id="container_english_module1" class="questions-container-list"></div>
                         <button type="button" class="add-question-btn" onclick="addQuestion('english_module1')">
-                            <i class="fas fa-plus"></i> Add Question to Eng 1
+                            <i class="fas fa-plus"></i> Add Question
                         </button>
                     </div>
                 </div>
 
                 <div id="english_module2_tab" class="tab-content">
-                    <div class="form-row">
+                    <div class="form-row two-col">
                         <div class="form-group">
-                            <label>Module Duration (min)</label>
-                            <input type="number" class="module-duration" id="dur_english_module2" value="32">
+                            <label>Duration (minutes)</label>
+                            <input type="number" id="dur_english_module2" value="32" min="1" max="120">
                         </div>
                         <div class="form-group">
-                            <label>Status</label>
-                            <select class="module-active" id="active_english_module2">
+                            <label>Module Status</label>
+                            <select id="active_english_module2">
                                 <option value="true">Active</option>
                                 <option value="false">Inactive</option>
                             </select>
@@ -929,24 +1167,25 @@
                     </div>
                     <div class="questions-section">
                         <div class="questions-header">
-                            <h4><i class="fas fa-list-ol"></i> English Module 2 Questions <span class="q-count-badge" id="count_english_module2">(0/27)</span></h4>
+                            <h4><i class="fas fa-list-ol"></i> Questions <span class="q-count-badge" id="count_english_module2">(0/27)</span></h4>
                         </div>
+                        <div class="progress-bar"><div class="progress-fill" id="progress_english_module2" style="width: 0%"></div></div>
                         <div id="container_english_module2" class="questions-container-list"></div>
                         <button type="button" class="add-question-btn" onclick="addQuestion('english_module2')">
-                            <i class="fas fa-plus"></i> Add Question to Eng 2
+                            <i class="fas fa-plus"></i> Add Question
                         </button>
                     </div>
                 </div>
 
                 <div id="math_module1_tab" class="tab-content">
-                    <div class="form-row">
+                    <div class="form-row two-col">
                         <div class="form-group">
-                            <label>Module Duration (min)</label>
-                            <input type="number" class="module-duration" id="dur_math_module1" value="35">
+                            <label>Duration (minutes)</label>
+                            <input type="number" id="dur_math_module1" value="35" min="1" max="120">
                         </div>
                         <div class="form-group">
-                            <label>Status</label>
-                            <select class="module-active" id="active_math_module1">
+                            <label>Module Status</label>
+                            <select id="active_math_module1">
                                 <option value="true">Active</option>
                                 <option value="false">Inactive</option>
                             </select>
@@ -954,24 +1193,25 @@
                     </div>
                     <div class="questions-section">
                         <div class="questions-header">
-                            <h4><i class="fas fa-list-ol"></i> Math Module 1 Questions <span class="q-count-badge" id="count_math_module1">(0/22)</span></h4>
+                            <h4><i class="fas fa-list-ol"></i> Questions <span class="q-count-badge" id="count_math_module1">(0/22)</span></h4>
                         </div>
+                        <div class="progress-bar"><div class="progress-fill" id="progress_math_module1" style="width: 0%"></div></div>
                         <div id="container_math_module1" class="questions-container-list"></div>
                         <button type="button" class="add-question-btn" onclick="addQuestion('math_module1')">
-                            <i class="fas fa-plus"></i> Add Question to Math 1
+                            <i class="fas fa-plus"></i> Add Question
                         </button>
                     </div>
                 </div>
 
                 <div id="math_module2_tab" class="tab-content">
-                    <div class="form-row">
+                    <div class="form-row two-col">
                         <div class="form-group">
-                            <label>Module Duration (min)</label>
-                            <input type="number" class="module-duration" id="dur_math_module2" value="35">
+                            <label>Duration (minutes)</label>
+                            <input type="number" id="dur_math_module2" value="35" min="1" max="120">
                         </div>
                         <div class="form-group">
-                            <label>Status</label>
-                            <select class="module-active" id="active_math_module2">
+                            <label>Module Status</label>
+                            <select id="active_math_module2">
                                 <option value="true">Active</option>
                                 <option value="false">Inactive</option>
                             </select>
@@ -979,29 +1219,50 @@
                     </div>
                     <div class="questions-section">
                         <div class="questions-header">
-                            <h4><i class="fas fa-list-ol"></i> Math Module 2 Questions <span class="q-count-badge" id="count_math_module2">(0/22)</span></h4>
+                            <h4><i class="fas fa-list-ol"></i> Questions <span class="q-count-badge" id="count_math_module2">(0/22)</span></h4>
                         </div>
+                        <div class="progress-bar"><div class="progress-fill" id="progress_math_module2" style="width: 0%"></div></div>
                         <div id="container_math_module2" class="questions-container-list"></div>
                         <button type="button" class="add-question-btn" onclick="addQuestion('math_module2')">
-                            <i class="fas fa-plus"></i> Add Question to Math 2
+                            <i class="fas fa-plus"></i> Add Question
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div class="form-actions" style="padding: 1.5rem 2.5rem; background: rgba(15, 23, 42, 0.4);">
-                <button type="button" class="btn-secondary close-modal">Cancel</button>
-                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Save All Modules</button>
+            <div class="form-actions">
+                <div class="form-actions-left">
+                    <span class="save-indicator" id="save-indicator"></span>
+                </div>
+                <div class="form-actions-right">
+                    <button type="button" class="btn-secondary" onclick="closeAllModals()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn-primary" id="save-btn">
+                        <i class="fas fa-save"></i> Save Test Set
+                    </button>
+                </div>
             </div>
         </form>
+    </div>
+</div>
+
+<div id="preview-modal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Test Preview</h3>
+            <button class="close-modal" onclick="closeAllModals()">&times;</button>
+        </div>
+        <div class="modal-body" id="preview-content" style="padding: 2rem;"></div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let currentCategory = 'all';
-let selectedSubject = '';
+let currentFilter = 'all';
+let searchQuery = '';
+let allTestsData = [];
 let activeTab = 'english_module1';
 let questionCounts = {
     'english_module1': 0,
@@ -1023,17 +1284,23 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            currentCategory = this.dataset.category;
-            loadTests();
+            currentFilter = this.dataset.category;
+            renderTests();
         });
     });
-    
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', closeAllModals);
-    });
-    
-    document.getElementById('test-form').addEventListener('submit', saveAllModules);
 });
+
+function showToast(message, type = 'success') {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.remove(), 3000);
+}
 
 function closeAllModals() {
     document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
@@ -1049,11 +1316,10 @@ function switchTab(tabName) {
     });
 }
 
-function openSubjectSelector() {
+function openTestModal(title = null) {
     closeAllModals();
     document.getElementById('test-form').reset();
-    document.getElementById('test-id').value = '';
-    // Reset all containers
+    
     Object.keys(questionCounts).forEach(m => {
         document.getElementById(`container_${m}`).innerHTML = '';
         questionCounts[m] = 0;
@@ -1061,13 +1327,46 @@ function openSubjectSelector() {
     });
     
     switchTab('english_module1');
-    document.getElementById('modal-title').textContent = 'Create New Test Set';
+    
+    if (title) {
+        document.getElementById('test-title').value = title;
+        document.getElementById('modal-title').textContent = `Edit: ${title}`;
+        loadTestSetData(title);
+    } else {
+        document.getElementById('modal-title').textContent = 'Create New Test Set';
+    }
+    
     document.getElementById('test-modal').classList.add('show');
+}
+
+async function loadTestSetData(title) {
+    const modules = allTestsData.filter(t => t.title.toLowerCase() === title.toLowerCase());
+    
+    for (const mod of modules) {
+        const type = mod.test_type;
+        if (document.getElementById(`dur_${type}`)) {
+            document.getElementById(`dur_${type}`).value = mod.duration;
+        }
+        if (document.getElementById(`active_${type}`)) {
+            document.getElementById(`active_${type}`).value = mod.is_active.toString();
+        }
+        document.getElementById('test-difficulty').value = mod.difficulty;
+        
+        const container = document.getElementById(`container_${type}`);
+        if (container) {
+            container.innerHTML = '';
+            questionCounts[type] = 0;
+            
+            if (mod.questions && mod.questions.length > 0) {
+                mod.questions.forEach(q => addQuestionWithData(type, q));
+            }
+        }
+    }
 }
 
 function addQuestion(module) {
     if (questionCounts[module] >= MAX_QUESTIONS[module]) {
-        alert(`Maximum ${MAX_QUESTIONS[module]} questions allowed for ${module}`);
+        showToast(`Maximum ${MAX_QUESTIONS[module]} questions for this module`, 'error');
         return;
     }
     
@@ -1081,15 +1380,15 @@ function addQuestion(module) {
             <div class="question-item-header">
                 <span class="question-number">Question ${qNum}</span>
                 <button type="button" class="delete-question-btn" onclick="deleteQuestion(this, '${module}')">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash"></i> Remove
                 </button>
             </div>
-            <textarea class="question-text-input" placeholder="Enter question text..." rows="2" required></textarea>
+            <textarea class="question-text-input" placeholder="Enter the question text here..." rows="2" required></textarea>
             ${isMath ? `
             <div class="image-upload-section">
                 <label class="image-upload-label">
                     <i class="fas fa-image"></i>
-                    <span>Add image (optional)</span>
+                    <span>Click to add image (optional)</span>
                     <input type="file" class="image-upload-input" accept="image/*" onchange="handleImageUpload(this)">
                 </label>
                 <div class="image-preview"></div>
@@ -1098,22 +1397,22 @@ function addQuestion(module) {
             <div class="options-grid">
                 <div class="option-item">
                     <input type="radio" name="correct_${module}_${qNum}" value="A" class="option-radio" required>
-                    <span class="option-label">A)</span>
+                    <span class="option-label">A</span>
                     <input type="text" class="option-input" placeholder="Option A" required>
                 </div>
                 <div class="option-item">
                     <input type="radio" name="correct_${module}_${qNum}" value="B" class="option-radio">
-                    <span class="option-label">B)</span>
+                    <span class="option-label">B</span>
                     <input type="text" class="option-input" placeholder="Option B" required>
                 </div>
                 <div class="option-item">
                     <input type="radio" name="correct_${module}_${qNum}" value="C" class="option-radio">
-                    <span class="option-label">C)</span>
+                    <span class="option-label">C</span>
                     <input type="text" class="option-input" placeholder="Option C" required>
                 </div>
                 <div class="option-item">
                     <input type="radio" name="correct_${module}_${qNum}" value="D" class="option-radio">
-                    <span class="option-label">D)</span>
+                    <span class="option-label">D</span>
                     <input type="text" class="option-input" placeholder="Option D" required>
                 </div>
             </div>
@@ -1123,6 +1422,60 @@ function addQuestion(module) {
     container.insertAdjacentHTML('beforeend', questionHtml);
     updateQuestionCount(module);
     container.scrollTop = container.scrollHeight;
+}
+
+function addQuestionWithData(module, data) {
+    questionCounts[module]++;
+    const container = document.getElementById(`container_${module}`);
+    const isMath = module.startsWith('math');
+    const qNum = questionCounts[module];
+    
+    const qText = data.text || data.question_text || '';
+    
+    const questionHtml = `
+        <div class="question-item" data-question="${qNum}">
+            <div class="question-item-header">
+                <span class="question-number">Question ${qNum}</span>
+                <button type="button" class="delete-question-btn" onclick="deleteQuestion(this, '${module}')">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+            <textarea class="question-text-input" placeholder="Enter the question text here..." rows="2" required>${qText}</textarea>
+            ${isMath ? `
+            <div class="image-upload-section ${data.image ? 'has-image' : ''}">
+                <label class="image-upload-label">
+                    <i class="fas fa-image"></i>
+                    <span>Click to add image</span>
+                    <input type="file" class="image-upload-input" accept="image/*" onchange="handleImageUpload(this)">
+                </label>
+                <div class="image-preview">
+                    ${data.image ? `<img src="${data.image}"><button type="button" class="remove-image-btn" onclick="removeImage(this)"><i class="fas fa-times"></i></button>` : ''}
+                </div>
+            </div>
+            ` : ''}
+            <div class="options-grid">
+                ${['A', 'B', 'C', 'D'].map(label => {
+                    const opt = data.options ? data.options.find(o => o.label === label) : null;
+                    const isCorrect = data.correct_answer === label;
+                    const text = opt ? opt.text : '';
+                    return `
+                    <div class="option-item">
+                        <input type="radio" name="correct_${module}_${qNum}" value="${label}" class="option-radio" ${isCorrect ? 'checked' : ''} required>
+                        <span class="option-label">${label}</span>
+                        <input type="text" class="option-input" placeholder="Option ${label}" value="${escapeHtml(text)}" required>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', questionHtml);
+    updateQuestionCount(module);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 function deleteQuestion(btn, module) {
@@ -1140,8 +1493,7 @@ function renumberQuestions(module) {
         q.dataset.question = num;
         q.querySelector('.question-number').textContent = `Question ${num}`;
         
-        const radios = q.querySelectorAll('.option-radio');
-        radios.forEach(radio => {
+        q.querySelectorAll('.option-radio').forEach(radio => {
             radio.name = `correct_${module}_${num}`;
         });
     });
@@ -1150,12 +1502,23 @@ function renumberQuestions(module) {
 }
 
 function updateQuestionCount(module) {
-    document.getElementById(`count_${module}`).innerHTML = `(${questionCounts[module]}/${MAX_QUESTIONS[module]})`;
+    const count = questionCounts[module];
+    const max = MAX_QUESTIONS[module];
+    const percentage = (count / max) * 100;
+    
+    document.getElementById(`count_${module}`).textContent = `(${count}/${max})`;
+    document.getElementById(`tabcount_${module}`).textContent = `${count}/${max}`;
+    document.getElementById(`progress_${module}`).style.width = `${percentage}%`;
 }
 
 function handleImageUpload(input) {
     const file = input.files[0];
     if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Image must be less than 5MB', 'error');
+            return;
+        }
+        
         const reader = new FileReader();
         const preview = input.closest('.image-upload-section').querySelector('.image-preview');
         const section = input.closest('.image-upload-section');
@@ -1185,234 +1548,285 @@ async function loadTests() {
     try {
         const response = await fetch('/api/tests/');
         const result = await response.json();
-        const grid = document.getElementById('tests-grid');
-        
-        if (result.data.length === 0) {
-            grid.innerHTML = '<div class="no-data">No tests found. Click "Add New Test" to create one.</div>';
-            return;
-        }
-
-        const groups = {};
-        result.data.forEach(test => {
-            const titleKey = test.title.trim().toLowerCase();
-            if (!groups[titleKey]) {
-                groups[titleKey] = { 
-                    displayTitle: test.title.trim(),
-                    english_module1: null, 
-                    english_module2: null,
-                    math_module1: null,
-                    math_module2: null
-                };
-            }
-            groups[titleKey][test.test_type] = test;
-            if (test.test_type === 'english_module1') {
-                groups[titleKey].displayTitle = test.title.trim();
-            }
-        });
-
-        const datalist = document.getElementById('existing-titles');
-        datalist.innerHTML = Object.keys(groups).map(key => `<option value="${groups[key].displayTitle}">`).join('');
-
-        const filteredKeys = Object.keys(groups).filter(key => {
-            if (currentCategory === 'all') return true;
-            const group = groups[key];
-            if (currentCategory === 'english') return group.english_module1 || group.english_module2;
-            if (currentCategory === 'math') return group.math_module1 || group.math_module2;
-            return true;
-        });
-
-        if (filteredKeys.length === 0) {
-            grid.innerHTML = '<div class="no-data">No tests found for this category.</div>';
-            return;
-        }
-        
-        grid.innerHTML = filteredKeys.map(key => {
-            const group = groups[key];
-            const title = group.displayTitle;
-            const escapedTitle = title.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-            const hasE1 = !!group.english_module1;
-            const hasE2 = !!group.english_module2;
-            const hasM1 = !!group.math_module1;
-            const hasM2 = !!group.math_module2;
-            const isComplete = hasE1 && hasE2 && hasM1 && hasM2;
-            
-            return `
-                <div class="test-set-card">
-                    <div class="test-set-header">
-                        <div>
-                            <h3 class="test-set-title">${title}</h3>
-                            <div class="test-set-status">
-                                <span class="status-badge ${hasE1 ? 'complete' : 'incomplete'}">
-                                    <i class="fas fa-${hasE1 ? 'check-circle' : 'circle'}"></i> Eng 1
-                                </span>
-                                <span class="status-badge ${hasE2 ? 'complete' : 'incomplete'}">
-                                    <i class="fas fa-${hasE2 ? 'check-circle' : 'circle'}"></i> Eng 2
-                                </span>
-                                <span class="status-badge ${hasM1 ? 'complete' : 'incomplete'}">
-                                    <i class="fas fa-${hasM1 ? 'check-circle' : 'circle'}"></i> Math 1
-                                </span>
-                                <span class="status-badge ${hasM2 ? 'complete' : 'incomplete'}">
-                                    <i class="fas fa-${hasM2 ? 'check-circle' : 'circle'}"></i> Math 2
-                                </span>
-                            </div>
-                        </div>
-                        <div class="test-actions-main">
-                            <button class="q-action-btn edit" onclick="editTestSet('${escapedTitle}')" title="Edit entire set">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="q-action-btn delete" onclick="deleteTestSet('${escapedTitle}')" title="Delete entire set">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="sections-container">
-                        <div class="section-column">
-                            <div class="section-header">
-                                <h4 class="section-title"><i class="fas fa-book-open"></i> English</h4>
-                                <button class="add-section-btn" onclick="addSpecificModule('${escapedTitle}', 'english_module1')">Add/Edit</button>
-                            </div>
-                            <div class="questions-list">
-                                ${hasE1 ? renderModuleInfo(group.english_module1, 'Module 1') : '<p style="color: #f87171; font-size: 0.8rem;">Module 1 missing</p>'}
-                                ${hasE2 ? renderModuleInfo(group.english_module2, 'Module 2') : '<p style="color: #f87171; font-size: 0.8rem;">Module 2 missing</p>'}
-                            </div>
-                        </div>
-                        <div class="section-column">
-                            <div class="section-header">
-                                <h4 class="section-title"><i class="fas fa-calculator"></i> Math</h4>
-                                <button class="add-section-btn" onclick="addSpecificModule('${escapedTitle}', 'math_module1')">Add/Edit</button>
-                            </div>
-                            <div class="questions-list">
-                                ${hasM1 ? renderModuleInfo(group.math_module1, 'Module 1') : '<p style="color: #f87171; font-size: 0.8rem;">Module 1 missing</p>'}
-                                ${hasM2 ? renderModuleInfo(group.math_module2, 'Module 2') : '<p style="color: #f87171; font-size: 0.8rem;">Module 2 missing</p>'}
-                            </div>
-                        </div>
-                    </div>
-                    ${isComplete ? '<p style="color: #34d399; text-align: center; margin-top: 1rem; font-weight: 600;"><i class="fas fa-check-circle"></i> Complete</p>' : '<p style="color: #f87171; text-align: center; margin-top: 1rem; font-weight: 600;"><i class="fas fa-exclamation-circle"></i> Incomplete</p>'}
-                </div>
-            `;
-        }).join('');
+        allTestsData = result.data || [];
+        renderTests();
+        updateStats();
     } catch (error) {
         console.error('Error loading tests:', error);
+        document.getElementById('tests-grid').innerHTML = '<div class="no-data"><i class="fas fa-exclamation-triangle"></i><br>Failed to load tests</div>';
     }
 }
 
-function renderModuleInfo(test, moduleName) {
-    return `
-        <div class="question-row">
-            <div class="question-info">
-                <span class="question-label">${moduleName}</span>
-                <span class="question-preview">${test.questions_count} questions • ${test.duration} min</span>
-            </div>
-        </div>
-    `;
-}
-
-async function editTestSet(title) {
-    try {
-        const response = await fetch('/api/tests/');
-        const result = await response.json();
-        const modules = result.data.filter(t => t.title === title);
-        
-        openSubjectSelector();
-        document.getElementById('test-title').value = title;
-        document.getElementById('modal-title').textContent = `Edit Test Set: ${title}`;
-        
-        for (const mod of modules) {
-            const type = mod.test_type;
-            document.getElementById(`dur_${type}`).value = mod.duration;
-            document.getElementById(`active_${type}`).value = mod.is_active.toString();
-            document.getElementById('test-difficulty').value = mod.difficulty;
-            
-            const container = document.getElementById(`container_${type}`);
-            container.innerHTML = '';
-            questionCounts[type] = 0;
-            
-            if (mod.questions) {
-                mod.questions.forEach(q => addQuestionWithData(type, q));
-            }
-        }
-        
-        document.getElementById('test-modal').classList.add('show');
-    } catch (error) {
-        console.error('Error editing test set:', error);
-    }
-}
-
-function addQuestionWithData(module, data) {
-    questionCounts[module]++;
-    const container = document.getElementById(`container_${module}`);
-    const isMath = module.startsWith('math');
-    const qNum = questionCounts[module];
+function updateStats() {
+    const groups = groupTests(allTestsData);
+    const groupKeys = Object.keys(groups);
     
-    const questionHtml = `
-        <div class="question-item" data-question="${qNum}">
-            <div class="question-item-header">
-                <span class="question-number">Question ${qNum}</span>
-                <button type="button" class="delete-question-btn" onclick="deleteQuestion(this, '${module}')">
-                    <i class="fas fa-trash"></i>
-                </button>
+    let completeCount = 0;
+    let totalQuestions = 0;
+    
+    groupKeys.forEach(key => {
+        const g = groups[key];
+        if (g.english_module1 && g.english_module2 && g.math_module1 && g.math_module2) {
+            completeCount++;
+        }
+        [g.english_module1, g.english_module2, g.math_module1, g.math_module2].forEach(m => {
+            if (m) totalQuestions += m.questions_count || 0;
+        });
+    });
+    
+    document.getElementById('stat-total').textContent = groupKeys.length;
+    document.getElementById('stat-complete').textContent = completeCount;
+    document.getElementById('stat-questions').textContent = totalQuestions;
+    document.getElementById('stat-completions').textContent = allTestsData.reduce((sum, t) => sum + (t.completions || 0), 0);
+}
+
+function groupTests(tests) {
+    const groups = {};
+    tests.forEach(test => {
+        const titleKey = test.title.trim().toLowerCase();
+        if (!groups[titleKey]) {
+            groups[titleKey] = { 
+                displayTitle: test.title.trim(),
+                english_module1: null, 
+                english_module2: null,
+                math_module1: null,
+                math_module2: null,
+                created_at: test.created_at,
+                difficulty: test.difficulty
+            };
+        }
+        groups[titleKey][test.test_type] = test;
+    });
+    return groups;
+}
+
+function filterTests() {
+    searchQuery = document.getElementById('search-input').value.toLowerCase();
+    renderTests();
+}
+
+function renderTests() {
+    const grid = document.getElementById('tests-grid');
+    const groups = groupTests(allTestsData);
+    
+    let filteredKeys = Object.keys(groups).filter(key => {
+        const g = groups[key];
+        const isComplete = g.english_module1 && g.english_module2 && g.math_module1 && g.math_module2;
+        
+        if (currentFilter === 'complete' && !isComplete) return false;
+        if (currentFilter === 'incomplete' && isComplete) return false;
+        if (searchQuery && !g.displayTitle.toLowerCase().includes(searchQuery)) return false;
+        
+        return true;
+    });
+
+    if (filteredKeys.length === 0) {
+        grid.innerHTML = `
+            <div class="no-data">
+                <i class="fas fa-folder-open"></i><br>
+                ${searchQuery ? 'No tests match your search' : 'No tests found. Create your first test!'}
             </div>
-            <textarea class="question-text-input" placeholder="Enter question text..." rows="2" required>${data.text || data.question_text || ''}</textarea>
-            ${isMath ? `
-            <div class="image-upload-section ${data.image ? 'has-image' : ''}">
-                <label class="image-upload-label">
-                    <i class="fas fa-image"></i>
-                    <span>Add image</span>
-                    <input type="file" class="image-upload-input" accept="image/*" onchange="handleImageUpload(this)">
-                </label>
-                <div class="image-preview">
-                    ${data.image ? `<img src="${data.image}"><button type="button" class="remove-image-btn" onclick="removeImage(this)"><i class="fas fa-times"></i></button>` : ''}
+        `;
+        return;
+    }
+    
+    grid.innerHTML = filteredKeys.map(key => {
+        const g = groups[key];
+        const title = g.displayTitle;
+        const hasE1 = !!g.english_module1;
+        const hasE2 = !!g.english_module2;
+        const hasM1 = !!g.math_module1;
+        const hasM2 = !!g.math_module2;
+        const isComplete = hasE1 && hasE2 && hasM1 && hasM2;
+        const modulesComplete = [hasE1, hasE2, hasM1, hasM2].filter(Boolean).length;
+        
+        const totalQuestions = [g.english_module1, g.english_module2, g.math_module1, g.math_module2]
+            .filter(Boolean).reduce((sum, m) => sum + (m.questions_count || 0), 0);
+        const totalDuration = [g.english_module1, g.english_module2, g.math_module1, g.math_module2]
+            .filter(Boolean).reduce((sum, m) => sum + (m.duration || 0), 0);
+        
+        return `
+            <div class="test-set-card">
+                <div class="test-set-header">
+                    <div>
+                        <h3 class="test-set-title">${title}</h3>
+                        <div class="test-set-meta">
+                            <span class="meta-tag difficulty-${g.difficulty || 'medium'}">${g.difficulty || 'Medium'}</span>
+                            <span class="meta-tag questions"><i class="fas fa-question-circle"></i> ${totalQuestions} Q</span>
+                            <span class="meta-tag duration"><i class="fas fa-clock"></i> ${totalDuration} min</span>
+                        </div>
+                    </div>
+                    <div class="test-actions-main">
+                        <button class="q-action-btn preview" onclick="previewTest('${title.replace(/'/g, "\\'")}')" title="Preview">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="q-action-btn edit" onclick="openTestModal('${title.replace(/'/g, "\\'")}')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="q-action-btn duplicate" onclick="duplicateTest('${title.replace(/'/g, "\\'")}')" title="Duplicate">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="q-action-btn delete" onclick="deleteTestSet('${title.replace(/'/g, "\\'")}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="modules-grid">
+                    ${renderModuleItem(g.english_module1, 'English 1', 'english')}
+                    ${renderModuleItem(g.english_module2, 'English 2', 'english')}
+                    ${renderModuleItem(g.math_module1, 'Math 1', 'math')}
+                    ${renderModuleItem(g.math_module2, 'Math 2', 'math')}
+                </div>
+                
+                <div class="test-footer">
+                    <span class="completion-badge ${isComplete ? 'complete' : 'incomplete'}">
+                        <i class="fas fa-${isComplete ? 'check-circle' : 'exclamation-circle'}"></i>
+                        ${modulesComplete}/4 Modules
+                    </span>
+                    <span class="test-date">Created: ${g.created_at || 'N/A'}</span>
                 </div>
             </div>
-            ` : ''}
-            <div class="options-grid">
-                ${['A', 'B', 'C', 'D'].map(label => {
-                    const opt = data.options ? data.options.find(o => o.label === label) : null;
-                    const isCorrect = data.correct_answer === label;
-                    const text = opt ? opt.text : (data[`option_${label.toLowerCase()}`] || '');
-                    return `
-                    <div class="option-item">
-                        <input type="radio" name="correct_${module}_${qNum}" value="${label}" class="option-radio" ${isCorrect ? 'checked' : ''} required>
-                        <span class="option-label">${label})</span>
-                        <input type="text" class="option-input" placeholder="Option ${label}" value="${text}" required>
-                    </div>`;
-                }).join('')}
-            </div>
-        </div>
-    `;
-    container.insertAdjacentHTML('beforeend', questionHtml);
-    updateQuestionCount(module);
+        `;
+    }).join('');
 }
 
-function addSpecificModule(title, module) {
-    editTestSet(title).then(() => {
-        switchTab(module);
+function renderModuleItem(module, name, type) {
+    if (module) {
+        return `
+            <div class="module-item">
+                <div class="module-icon ${type}"><i class="fas fa-${type === 'english' ? 'book-open' : 'calculator'}"></i></div>
+                <div class="module-info">
+                    <div class="module-name">${name}</div>
+                    <div class="module-stats">${module.questions_count || 0} questions • ${module.duration || 0} min</div>
+                </div>
+                <div class="module-status complete"></div>
+            </div>
+        `;
+    }
+    return `
+        <div class="module-item">
+            <div class="module-icon missing"><i class="fas fa-times"></i></div>
+            <div class="module-info">
+                <div class="module-name">${name}</div>
+                <div class="module-stats">Not created</div>
+            </div>
+            <div class="module-status missing"></div>
+        </div>
+    `;
+}
+
+function previewTest(title) {
+    const groups = groupTests(allTestsData);
+    const titleKey = title.toLowerCase();
+    const g = groups[titleKey];
+    
+    if (!g) return;
+    
+    let html = `<h2 style="color: #f1f5f9; margin-bottom: 1.5rem;">${g.displayTitle}</h2>`;
+    
+    ['english_module1', 'english_module2', 'math_module1', 'math_module2'].forEach(type => {
+        const module = g[type];
+        const moduleName = type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        
+        if (module && module.questions && module.questions.length > 0) {
+            html += `<h3 style="color: #60a5fa; margin: 1.5rem 0 1rem;">${moduleName} (${module.questions.length} questions)</h3>`;
+            module.questions.slice(0, 3).forEach((q, i) => {
+                html += `
+                    <div style="background: rgba(30, 41, 59, 0.5); padding: 1rem; border-radius: 10px; margin-bottom: 0.75rem;">
+                        <p style="color: #f1f5f9; margin: 0 0 0.5rem;"><strong>Q${i + 1}:</strong> ${q.text || q.question_text || 'No text'}</p>
+                        <p style="color: #64748b; margin: 0; font-size: 0.85rem;">Answer: ${q.correct_answer || 'N/A'}</p>
+                    </div>
+                `;
+            });
+            if (module.questions.length > 3) {
+                html += `<p style="color: #64748b; font-style: italic;">... and ${module.questions.length - 3} more questions</p>`;
+            }
+        } else {
+            html += `<h3 style="color: #f87171; margin: 1.5rem 0 1rem;">${moduleName} - No questions</h3>`;
+        }
     });
+    
+    document.getElementById('preview-content').innerHTML = html;
+    document.getElementById('preview-modal').classList.add('show');
+}
+
+async function duplicateTest(title) {
+    const newTitle = prompt('Enter name for duplicated test:', `${title} (Copy)`);
+    if (!newTitle || newTitle.trim() === '') return;
+    
+    const modules = allTestsData.filter(t => t.title.toLowerCase() === title.toLowerCase());
+    
+    for (const mod of modules) {
+        const data = {
+            title: newTitle.trim(),
+            category: mod.category,
+            test_type: mod.test_type,
+            difficulty: mod.difficulty,
+            duration: mod.duration,
+            questions_count: mod.questions_count,
+            questions: mod.questions,
+            is_active: mod.is_active
+        };
+        
+        await fetch('/api/tests/create/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+    }
+    
+    showToast('Test duplicated successfully!');
+    loadTests();
 }
 
 async function saveAllModules(e) {
     e.preventDefault();
+    
     const title = document.getElementById('test-title').value.trim();
+    if (!title) {
+        showToast('Please enter a test name', 'error');
+        return;
+    }
+    
     const difficulty = document.getElementById('test-difficulty').value;
+    const saveBtn = document.getElementById('save-btn');
+    const indicator = document.getElementById('save-indicator');
+    
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    indicator.textContent = 'Saving modules...';
     
     const modulesToSave = ['english_module1', 'english_module2', 'math_module1', 'math_module2'];
     let savedCount = 0;
+    let errors = [];
     
     for (const moduleType of modulesToSave) {
         const container = document.getElementById(`container_${moduleType}`);
         const questions = [];
+        let hasValidationError = false;
         
         container.querySelectorAll('.question-item').forEach((item, idx) => {
-            const qText = item.querySelector('.question-text-input').value;
+            const qText = item.querySelector('.question-text-input').value.trim();
+            if (!qText) {
+                hasValidationError = true;
+                return;
+            }
+            
             const opts = [];
             let correct = '';
             
             item.querySelectorAll('.option-item').forEach(opt => {
-                const label = opt.querySelector('.option-label').textContent.replace(')', '');
-                opts.push({ label: label, text: opt.querySelector('.option-input').value });
+                const label = opt.querySelector('.option-label').textContent.trim();
+                const optText = opt.querySelector('.option-input').value.trim();
+                opts.push({ label: label, text: optText });
                 if (opt.querySelector('.option-radio').checked) correct = label;
             });
+            
+            if (!correct) {
+                hasValidationError = true;
+                return;
+            }
             
             const img = item.querySelector('.image-preview img');
             questions.push({
@@ -1424,52 +1838,69 @@ async function saveAllModules(e) {
             });
         });
         
-        if (questions.length === 0) continue; // Skip empty modules
+        if (questions.length === 0) continue;
+        
+        if (hasValidationError) {
+            errors.push(`${moduleType}: Some questions are incomplete`);
+            continue;
+        }
         
         const data = {
             title: title,
             category: moduleType.startsWith('english') ? 'english' : 'math',
             test_type: moduleType,
             difficulty: difficulty,
-            duration: parseInt(document.getElementById(`dur_${moduleType}`).value),
+            duration: parseInt(document.getElementById(`dur_${moduleType}`).value) || 32,
             questions_count: questions.length,
             questions: questions,
             is_active: document.getElementById(`active_${moduleType}`).value === 'true'
         };
         
         try {
-            await fetch('/api/tests/create/', {
+            const resp = await fetch('/api/tests/create/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-            savedCount++;
+            
+            if (resp.ok) {
+                savedCount++;
+                indicator.textContent = `Saved ${moduleType}...`;
+            } else {
+                errors.push(`${moduleType}: Server error`);
+            }
         } catch (err) {
-            console.error(`Error saving ${moduleType}:`, err);
+            errors.push(`${moduleType}: ${err.message}`);
         }
     }
     
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Test Set';
+    indicator.textContent = '';
+    
     if (savedCount > 0) {
-        alert(`${savedCount} modules saved successfully!`);
+        showToast(`${savedCount} module(s) saved successfully!`);
         closeAllModals();
         loadTests();
+    } else if (errors.length > 0) {
+        showToast(errors[0], 'error');
     } else {
-        alert('Please add at least one question to any module before saving.');
+        showToast('Please add questions to at least one module', 'error');
     }
 }
 
 async function deleteTestSet(title) {
-    if (!confirm(`Are you sure you want to delete all tests with title "${title}"?`)) return;
+    if (!confirm(`Delete "${title}" and all its modules?`)) return;
+    
     try {
-        const response = await fetch('/api/tests/');
-        const result = await response.json();
-        const toDelete = result.data.filter(t => t.title === title);
+        const toDelete = allTestsData.filter(t => t.title.toLowerCase() === title.toLowerCase());
         for (const test of toDelete) {
             await fetch(`/api/tests/${test.id}/delete/`, { method: 'DELETE' });
         }
+        showToast('Test deleted successfully');
         loadTests();
     } catch (error) {
-        console.error('Error deleting test set:', error);
+        showToast('Failed to delete test', 'error');
     }
 }
 </script>
