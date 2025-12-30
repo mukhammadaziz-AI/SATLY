@@ -147,8 +147,8 @@ class Test(models.Model):
     ]
     
     TYPE_CHOICES = [
-        ('reading', 'Reading'),
-        ('writing', 'Writing'),
+        ('english_module1', 'English Module 1'),
+        ('english_module2', 'English Module 2'),
         ('math_module1', 'Math Module 1'),
         ('math_module2', 'Math Module 2'),
     ]

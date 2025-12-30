@@ -933,20 +933,20 @@ function selectSubject(subject) {
     if (subject === 'english') {
         title.textContent = 'Select English Module';
         moduleContent.innerHTML = `
-            <div class="module-card" onclick="selectModule('reading')">
+            <div class="module-card" onclick="selectModule('english_module1')">
                 <div class="module-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <i class="fas fa-book-reader"></i>
                 </div>
-                <h4>Module 1: Reading</h4>
-                <p>Reading comprehension</p>
+                <h4>Module 1</h4>
+                <p>Reading & Writing</p>
                 <span class="badge-info">27 Questions • 32 min</span>
             </div>
-            <div class="module-card" onclick="selectModule('writing')">
+            <div class="module-card" onclick="selectModule('english_module2')">
                 <div class="module-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                     <i class="fas fa-pen-fancy"></i>
                 </div>
-                <h4>Module 2: Writing</h4>
-                <p>Grammar & Writing</p>
+                <h4>Module 2</h4>
+                <p>Reading & Writing</p>
                 <span class="badge-info">27 Questions • 32 min</span>
             </div>
         `;
@@ -1008,10 +1008,10 @@ function openTestForm() {
 
 function getModuleName(module) {
     const names = {
-        'reading': 'Reading',
-        'writing': 'Writing',
-        'math_module1': 'Module 1',
-        'math_module2': 'Module 2'
+        'english_module1': 'English Module 1',
+        'english_module2': 'English Module 2',
+        'math_module1': 'Math Module 1',
+        'math_module2': 'Math Module 2'
     };
     return names[module] || module;
 }
@@ -1441,11 +1441,38 @@ async function saveTest(e) {
     
     try {
         const url = testId ? `/api/tests/${testId}/` : '/api/tests/create/';
-        await fetch(url, {
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Check for pairing
+            const allTestsResp = await fetch('/api/tests/');
+            const allTests = await allTestsResp.json();
+            const sameTitleTests = allTests.data.filter(t => t.title === data.title);
+            
+            const hasEnglish1 = sameTitleTests.some(t => t.test_type === 'english_module1');
+            const hasEnglish2 = sameTitleTests.some(t => t.test_type === 'english_module2');
+            const hasMath1 = sameTitleTests.some(t => t.test_type === 'math_module1');
+            const hasMath2 = sameTitleTests.some(t => t.test_type === 'math_module2');
+            
+            if (!hasEnglish1 || !hasEnglish2 || !hasMath1 || !hasMath2) {
+                const missing = [];
+                if (!hasEnglish1) missing.push('English Module 1');
+                if (!hasEnglish2) missing.push('English Module 2');
+                if (!hasMath1) missing.push('Math Module 1');
+                if (!hasMath2) missing.push('Math Module 2');
+                
+                alert(`Test saved! Note: This test set is still INCOMPLETE. Missing: ${missing.join(', ')}. Users won't be able to take the full exam until all modules are added.`);
+            } else {
+                alert('Success! Full test set is now complete and ready for users.');
+            }
+        }
+        
         closeAllModals();
         loadTests();
     } catch (error) {

@@ -161,15 +161,16 @@ def user_dashboard(request):
                 'description': test.description
             }
         
-        if test.category == 'english':
+        # Ensure we point to English Module 1 as the starting point if it exists
+        if test.test_type == 'english_module1':
             grouped_tests[test.title]['english'] = test
             grouped_tests[test.title]['id'] = test.id
             grouped_tests[test.title]['category'] = 'english'
-        elif test.category == 'math':
+        elif test.test_type == 'math_module1' and not grouped_tests[test.title]['english']:
+            # Fallback to Math if no English 1 exists yet
             grouped_tests[test.title]['math'] = test
-            if not grouped_tests[test.title]['english']:
-                grouped_tests[test.title]['id'] = test.id
-                grouped_tests[test.title]['category'] = 'math'
+            grouped_tests[test.title]['id'] = test.id
+            grouped_tests[test.title]['category'] = 'math'
         
         grouped_tests[test.title]['total_questions'] += test.questions_count
         grouped_tests[test.title]['total_duration'] += test.duration
@@ -291,15 +292,15 @@ def start_exam(request):
             del request.session['has_paid_for_attempt']
             
         test = None
-        if test_id:
-            test = get_object_or_404(Test, id=test_id)
-            # If they chose a specific module but it's part of a set, find the first module (Reading)
-            first_test = Test.objects.filter(title=test.title, test_type='reading', is_active=True).first()
-            if first_test:
-                test = first_test
-        else:
-            # If no ID, pick the latest reading test as the "Full Exam" entry point
-            test = Test.objects.filter(test_type='reading', is_active=True).order_by('-created_at').first()
+            if test_id:
+                test = get_object_or_404(Test, id=test_id)
+                # If they chose a specific module but it's part of a set, find the first module (English 1)
+                first_test = Test.objects.filter(title=test.title, test_type='english_module1', is_active=True).first()
+                if first_test:
+                    test = first_test
+            else:
+                # If no ID, pick the latest english test as the "Full Exam" entry point
+                test = Test.objects.filter(test_type='english_module1', is_active=True).order_by('-created_at').first()
 
         session = ExamSession.objects.create(
             user=request.user, 
@@ -379,8 +380,8 @@ def start_exam(request):
 
 def get_module_display_name(test_type):
     names = {
-        'reading': 'Reading (Module 1)',
-        'writing': 'Writing (Module 2)',
+        'english_module1': 'English (Module 1)',
+        'english_module2': 'English (Module 2)',
         'math_module1': 'Math (Module 1)',
         'math_module2': 'Math (Module 2)'
     }
@@ -467,7 +468,7 @@ def find_next_test(current_test, next_type):
         return next_test
         
     # 2. Try partial match by removing common suffixes
-    base_title = current_test.title.replace(' - Reading', '').replace(' - Writing', '').replace(' - Math', '').replace(' - Module 1', '').replace(' - Module 2', '').strip()
+    base_title = current_test.title.replace(' - Reading', '').replace(' - Writing', '').replace(' - English', '').replace(' - Math', '').replace(' - Module 1', '').replace(' - Module 2', '').strip()
     
     next_test = Test.objects.filter(
         title__icontains=base_title,
@@ -498,22 +499,22 @@ def api_finish_section(request):
             current_type = session.test.test_type
             
             # Save correct count to the appropriate module field
-            if current_type == 'reading':
+            if current_type == 'english_module1':
                 session.english_module1_score = correct_count
-                # Move to Writing (Module 2)
-                next_test = find_next_test(session.test, 'writing')
+                # Move to English Module 2
+                next_test = find_next_test(session.test, 'english_module2')
                 if next_test:
                     session.test = next_test
                     session.save()
                     return JsonResponse({'next_action': 'next_module'})
                 else:
-                    # If no writing module, skip to break
+                    # If no module 2, skip to break
                     session.english_score = calculate_section_score(session.english_module1_score, 27)
                     session.status = 'break'
                     session.save()
                     return JsonResponse({'next_action': 'break'})
                     
-            elif current_type == 'writing':
+            elif current_type == 'english_module2':
                 session.english_module2_score = correct_count
                 session.english_score = calculate_section_score(session.english_module1_score + session.english_module2_score, 54)
                 session.current_section = 'math'
