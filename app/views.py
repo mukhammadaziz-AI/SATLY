@@ -288,6 +288,9 @@ def start_exam(request):
     
     # Check for test_id from session or GET
     test_id = request.session.get('pending_test_id') or request.GET.get('test_id')
+    # Ensure test_id is valid (not empty string)
+    if test_id and isinstance(test_id, str):
+        test_id = test_id.strip() if test_id.strip() else None
     
     if not session:
         # Clear payment flags once we start
@@ -298,13 +301,17 @@ def start_exam(request):
             
         test = None
         if test_id:
-            test = get_object_or_404(Test, id=test_id)
-            # If they chose a specific module but it's part of a set, find the first module (English 1)
-            first_test = Test.objects.filter(title=test.title, test_type='english_module1', is_active=True).first()
-            if first_test:
-                test = first_test
-        else:
-            # If no ID, pick the latest english test as the "Full Exam" entry point
+            try:
+                test = Test.objects.get(id=test_id, is_active=True)
+                # If they chose a specific module but it's part of a set, find the first module (English 1)
+                first_test = Test.objects.filter(title__iexact=test.title.strip(), test_type='english_module1', is_active=True).first()
+                if first_test:
+                    test = first_test
+            except Test.DoesNotExist:
+                test = None
+        
+        if not test:
+            # If no valid test_id or test not found, pick the latest english test as the "Full Exam" entry point
             test = Test.objects.filter(test_type='english_module1', is_active=True).order_by('-created_at').first()
 
 
@@ -1072,6 +1079,12 @@ PAYME_API_KEY = "PLACEHOLDER_PAYME_KEY"
 def payment_page(request):
     settings = PricingSettings.get_settings()
     test_id = request.GET.get('test_id')
+    
+    # If no test_id provided, get the latest available test
+    if not test_id or not test_id.strip():
+        latest_test = Test.objects.filter(test_type='english_module1', is_active=True).order_by('-created_at').first()
+        if latest_test:
+            test_id = str(latest_test.id)
     
     if request.method == 'POST':
         payment_method = request.POST.get('payment_method')
