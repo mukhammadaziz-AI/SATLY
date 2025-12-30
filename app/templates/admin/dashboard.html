@@ -388,7 +388,7 @@
     <div class="dashboard-header">
         <div>
             <h1 class="dashboard-title">Dashboard</h1>
-            <p class="dashboard-subtitle">Welcome Back, Admin</p>
+            <p class="dashboard-subtitle">Welcome Back, {{ request.user.first_name|default:request.user.username }}</p>
         </div>
         <div class="date-badge">
             <i class="fas fa-calendar-alt"></i>

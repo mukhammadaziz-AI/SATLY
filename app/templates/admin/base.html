@@ -325,6 +325,11 @@
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>
                     </a>
+                    <div style="margin: 10px 0; border-top: 1px solid rgba(148, 163, 184, 0.1);"></div>
+                    <a href="{% url 'user_dashboard' %}" class="nav-item" style="color: #60a5fa;">
+                        <i class="fas fa-external-link-alt"></i>
+                        <span>User Dashboard</span>
+                    </a>
                 </nav>
             </div>
 
@@ -358,10 +363,14 @@
 
             <div class="sidebar-footer">
                 <div class="admin-profile">
-                    <img src="https://ui-avatars.com/api/?name=Admin&background=6ab2f2&color=fff&bold=true" alt="Admin">
+                    {% if request.user.avatar %}
+                        <img src="{{ request.user.avatar.url }}" alt="{{ request.user.username }}">
+                    {% else %}
+                        <img src="https://ui-avatars.com/api/?name={{ request.user.first_name|default:request.user.username }}&background=6ab2f2&color=fff&bold=true" alt="{{ request.user.username }}">
+                    {% endif %}
                     <div class="admin-info">
-                        <span class="admin-name">Admin</span>
-                        <span class="admin-role">Super Admin</span>
+                        <span class="admin-name">{{ request.user.first_name|default:request.user.username }}</span>
+                        <span class="admin-role">{% if request.user.is_superuser %}Super Admin{% else %}Staff{% endif %}</span>
                     </div>
                 </div>
                 <a href="{% url 'logout' %}" class="logout-btn">
