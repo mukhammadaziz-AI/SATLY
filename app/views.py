@@ -452,8 +452,6 @@ def api_save_time(request):
     return JsonResponse({'success': False})
 
 
-@csrf_exempt
-@login_required
 def find_next_test(current_test, next_type):
     if not current_test:
         return None
