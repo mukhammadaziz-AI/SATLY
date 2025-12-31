@@ -243,6 +243,14 @@ def logout_view(request):
 def user_dashboard(request):
     user = request.user
     
+    original_user_id = request.session.get('original_user_id')
+    if original_user_id and user.is_staff:
+        try:
+            original_user = User.objects.get(id=original_user_id)
+            user = original_user
+        except User.DoesNotExist:
+            pass
+    
     recent_results = ExamSession.objects.filter(user=user, status='completed').order_by('-completed_at')[:5]
     
     # Fetch available tests from Test model and group by title
@@ -1275,19 +1283,12 @@ def payment_page(request):
         request.user.subscription = 'premium'
         request.user.save()
         
-    # Remove specific payment message from global messages to avoid showing it in settings
-    # messages.success(request, f"To'lovni muvaffaqiyatli amalga oshirdingiz! Testni boshlashingiz mumkin.")
-    
-    if post_test_id and post_test_id.strip():
-        request.session['pending_test_id'] = post_test_id
-    request.session['has_paid_for_attempt'] = True
-    
-    # Render payment page again but with success state for 5s delay
-    return render(request, 'main/payment.html', {
-        'settings': settings, 
-        'test_id': post_test_id,
-        'payment_success': True
-    })
+        messages.success(request, f"To'lovni muvaffaqiyatli amalga oshirdingiz! Testni boshlashingiz mumkin.")
+        
+        if post_test_id and post_test_id.strip():
+            request.session['pending_test_id'] = post_test_id
+        request.session['has_paid_for_attempt'] = True
+        return redirect('start_exam')
     
     return render(request, 'main/payment.html', {'settings': settings, 'test_id': test_id})
 
