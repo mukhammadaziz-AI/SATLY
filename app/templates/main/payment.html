@@ -458,6 +458,34 @@
                     </button>
                 </div>
 
+                <div id="clickForm" class="card-form">
+                    <p class="section-title">Click orqali to'lov</p>
+                    <div style="background: #f0f9ff; border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem;">
+                        <p style="color: var(--gray); line-height: 1.6; margin-bottom: 1rem;">
+                            <i class="fas fa-info-circle" style="color: var(--primary);"></i>
+                            Click ilovasiga yo'naltirilasiz va u yerda to'lovni amalga oshirasiz.
+                        </p>
+                    </div>
+                    <button type="submit" class="btn-pay">
+                        <img src="{% static 'images/click.png' %}" alt="Click" style="height: 24px; filter: brightness(10);">
+                        Click orqali to'lash
+                    </button>
+                </div>
+
+                <div id="paymeForm" class="card-form">
+                    <p class="section-title">Payme orqali to'lov</p>
+                    <div style="background: #ecfdf5; border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem;">
+                        <p style="color: var(--gray); line-height: 1.6; margin-bottom: 1rem;">
+                            <i class="fas fa-info-circle" style="color: var(--secondary);"></i>
+                            Payme ilovasiga yo'naltirilasiz va u yerda to'lovni amalga oshirasiz.
+                        </p>
+                    </div>
+                    <button type="submit" class="btn-pay" style="background: linear-gradient(135deg, #00c9b7 0%, #009688 100%);">
+                        <img src="{% static 'images/payme.png' %}" alt="Payme" style="height: 24px; filter: brightness(10);">
+                        Payme orqali to'lash
+                    </button>
+                </div>
+
                 <button type="button" class="btn-cancel" onclick="window.history.back()">
                     Bekor qilish
                 </button>
@@ -566,15 +594,20 @@
                 this.closest('.payment-method').classList.add('active');
                 
                 const cardForm = document.getElementById('cardForm');
-                const payBtn = document.querySelector('.btn-pay');
+                const clickForm = document.getElementById('clickForm');
+                const paymeForm = document.getElementById('paymeForm');
+                
+                cardForm.classList.remove('active');
+                clickForm.classList.remove('active');
+                paymeForm.classList.remove('active');
                 
                 if (this.value === 'uzcard') {
                     cardForm.classList.add('active');
-                } else {
-                    cardForm.classList.remove('active');
+                } else if (this.value === 'click') {
+                    clickForm.classList.add('active');
+                } else if (this.value === 'payme') {
+                    paymeForm.classList.add('active');
                 }
-                payBtn.disabled = false;
-                payBtn.innerHTML = 'To\'lovni amalga oshirish';
             });
         });
 

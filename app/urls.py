@@ -53,4 +53,8 @@ urlpatterns = [
     path('api/tests/<int:test_id>/delete/', views.api_test_delete, name='api_test_delete'),
     
     path('api/results/', views.api_results_list, name='api_results_list'),
+    
+    # Payment webhook endpoints (for Click and Payme callbacks)
+    path('api/click/callback/', views.click_callback, name='click_callback'),
+    path('api/payme/callback/', views.payme_callback, name='payme_callback'),
 ]

@@ -16,12 +16,107 @@ import random
 from .models import User, Test, TestResult, DailyStats, Question, ExamSession, ExamAnswer, Payment, PricingSettings
 
 
-def calculate_section_score(correct_count, total_questions):
+def calculate_section_score(correct_count, total_questions, section='english'):
+    """
+    SAT scoring - Digital SAT 2024-2025 standard:
+    - Reading & Writing: 54 questions total (27 per module), 200-800 scale
+    - Math: 44 questions total (22 per module), 200-800 scale
+    
+    Scoring uses equating process - we approximate with a curve
+    """
     if total_questions == 0:
         return 200
-    # Simple SAT-like scaling: 200 to 800
-    score = 200 + (correct_count / total_questions) * 600
-    return int(score)
+    
+    percentage = correct_count / total_questions
+    
+    if section == 'english':
+        # English (Reading & Writing) scoring curve
+        # 54 questions = 200-800 scale
+        if percentage >= 0.98:
+            return 800
+        elif percentage >= 0.94:
+            return 780
+        elif percentage >= 0.90:
+            return 750
+        elif percentage >= 0.85:
+            return 720
+        elif percentage >= 0.80:
+            return 690
+        elif percentage >= 0.75:
+            return 660
+        elif percentage >= 0.70:
+            return 630
+        elif percentage >= 0.65:
+            return 600
+        elif percentage >= 0.60:
+            return 570
+        elif percentage >= 0.55:
+            return 540
+        elif percentage >= 0.50:
+            return 510
+        elif percentage >= 0.45:
+            return 480
+        elif percentage >= 0.40:
+            return 450
+        elif percentage >= 0.35:
+            return 420
+        elif percentage >= 0.30:
+            return 390
+        elif percentage >= 0.25:
+            return 360
+        elif percentage >= 0.20:
+            return 330
+        elif percentage >= 0.15:
+            return 300
+        elif percentage >= 0.10:
+            return 260
+        else:
+            return 200
+    else:
+        # Math scoring curve
+        # 44 questions = 200-800 scale
+        if percentage >= 0.98:
+            return 800
+        elif percentage >= 0.95:
+            return 790
+        elif percentage >= 0.91:
+            return 760
+        elif percentage >= 0.86:
+            return 730
+        elif percentage >= 0.82:
+            return 700
+        elif percentage >= 0.77:
+            return 670
+        elif percentage >= 0.73:
+            return 640
+        elif percentage >= 0.68:
+            return 610
+        elif percentage >= 0.64:
+            return 580
+        elif percentage >= 0.59:
+            return 550
+        elif percentage >= 0.55:
+            return 520
+        elif percentage >= 0.50:
+            return 490
+        elif percentage >= 0.45:
+            return 460
+        elif percentage >= 0.41:
+            return 430
+        elif percentage >= 0.36:
+            return 400
+        elif percentage >= 0.32:
+            return 370
+        elif percentage >= 0.27:
+            return 340
+        elif percentage >= 0.23:
+            return 310
+        elif percentage >= 0.18:
+            return 280
+        elif percentage >= 0.14:
+            return 250
+        else:
+            return 200
 
 
 def update_user_stats(user, session):
@@ -61,6 +156,7 @@ def login_page(request):
             user = authenticate(request, username=user.username, password=password)
             if user:
                 auth_login(request, user)
+                request.session['original_user_id'] = user.id
                 messages.success(request, 'Welcome back!')
                 return redirect('user_dashboard')
             else:
@@ -105,6 +201,7 @@ def register_page(request):
         )
         
         auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        request.session['original_user_id'] = user.id
         messages.success(request, 'Account created successfully!')
         return redirect('user_dashboard')
     
@@ -136,6 +233,8 @@ def quick_register(request):
 
 
 def logout_view(request):
+    if 'original_user_id' in request.session:
+        del request.session['original_user_id']
     auth_logout(request)
     return redirect('home')
 
@@ -143,6 +242,15 @@ def logout_view(request):
 @login_required
 def user_dashboard(request):
     user = request.user
+    
+    original_user_id = request.session.get('original_user_id')
+    if original_user_id and user.is_staff:
+        try:
+            original_user = User.objects.get(id=original_user_id)
+            user = original_user
+        except User.DoesNotExist:
+            pass
+    
     recent_results = ExamSession.objects.filter(user=user, status='completed').order_by('-completed_at')[:5]
     
     # Fetch available tests from Test model and group by title
@@ -490,22 +598,20 @@ def api_finish_section(request):
             # Save correct count to the appropriate module field
             if current_type == 'english_module1':
                 session.english_module1_score = correct_count
-                # Move to English Module 2
                 next_test = find_next_test(session.test, 'english_module2')
                 if next_test:
                     session.test = next_test
                     session.save()
                     return JsonResponse({'next_action': 'next_module'})
                 else:
-                    # If no module 2, skip to break
-                    session.english_score = calculate_section_score(session.english_module1_score, 27)
+                    session.english_score = calculate_section_score(session.english_module1_score, 27, 'english')
                     session.status = 'break'
                     session.save()
                     return JsonResponse({'next_action': 'break'})
                     
             elif current_type == 'english_module2':
                 session.english_module2_score = correct_count
-                session.english_score = calculate_section_score(session.english_module1_score + session.english_module2_score, 54)
+                session.english_score = calculate_section_score(session.english_module1_score + session.english_module2_score, 54, 'english')
                 session.current_section = 'math'
                 session.status = 'break'
                 session.save()
@@ -513,15 +619,13 @@ def api_finish_section(request):
                 
             elif current_type == 'math_module1':
                 session.math_module1_score = correct_count
-                # Move to Math Module 2
                 next_test = find_next_test(session.test, 'math_module2')
                 if next_test:
                     session.test = next_test
                     session.save()
                     return JsonResponse({'next_action': 'next_module'})
                 else:
-                    # If no module 2, finish
-                    session.math_score = calculate_section_score(session.math_module1_score, 22)
+                    session.math_score = calculate_section_score(session.math_module1_score, 22, 'math')
                     session.total_score = session.english_score + session.math_score
                     session.status = 'completed'
                     session.completed_at = timezone.now()
@@ -531,7 +635,7 @@ def api_finish_section(request):
                     
             elif current_type == 'math_module2':
                 session.math_module2_score = correct_count
-                session.math_score = calculate_section_score(session.math_module1_score + session.math_module2_score, 44)
+                session.math_score = calculate_section_score(session.math_module1_score + session.math_module2_score, 44, 'math')
                 session.total_score = session.english_score + session.math_score
                 session.status = 'completed'
                 session.completed_at = timezone.now()
@@ -1079,9 +1183,13 @@ def api_results_list(request):
     return JsonResponse({'data': data})
 
 
-# Payment configuration placeholders
-CLICK_API_KEY = "PLACEHOLDER_CLICK_KEY"
-PAYME_API_KEY = "PLACEHOLDER_PAYME_KEY"
+# Payment configuration - load from environment
+import os
+CLICK_MERCHANT_ID = os.environ.get('CLICK_MERCHANT_ID', '')
+CLICK_SERVICE_ID = os.environ.get('CLICK_SERVICE_ID', '')
+CLICK_SECRET_KEY = os.environ.get('CLICK_SECRET_KEY', '')
+PAYME_MERCHANT_ID = os.environ.get('PAYME_MERCHANT_ID', '')
+PAYME_SECRET_KEY = os.environ.get('PAYME_SECRET_KEY', '')
 
 @login_required
 def payment_page(request):
@@ -1119,42 +1227,68 @@ def payment_page(request):
             payment.card_expiry = card_expiry
             payment.save()
             
-            # Processing Uzcard/Humo simulation
             if float(settings.exam_price) > 0:
                 import time
                 time.sleep(2)
             
         elif payment_method == 'click':
-            # CLICK Integration Placeholder
-            # Use CLICK_API_KEY to process payment via API
-            # For now, simulate success
+            # CLICK Integration
+            # API credentials from .env: CLICK_MERCHANT_ID, CLICK_SERVICE_ID, CLICK_SECRET_KEY
+            # 
+            # To enable Click payments:
+            # 1. Register at https://merchant.click.uz
+            # 2. Get your credentials (merchant_id, service_id, secret_key)
+            # 3. Add them to .env file
+            # 4. For production: implement webhook at /api/click/callback/
+            #
+            # Click payment flow:
+            # - User clicks "Click orqali to'lash"
+            # - Redirect to Click checkout page with payment params
+            # - Click processes payment and calls your webhook
+            # - Webhook confirms payment and updates payment status
+            #
+            # Example redirect URL generation:
+            # amount_tiyin = int(float(settings.exam_price) * 100)
+            # click_url = f"https://my.click.uz/services/pay?service_id={CLICK_SERVICE_ID}&merchant_id={CLICK_MERCHANT_ID}&amount={amount_tiyin}&transaction_param={payment.transaction_id}&return_url={request.build_absolute_uri('/exam/')}"
             pass
             
         elif payment_method == 'payme':
-            # PAYME Integration Placeholder
-            # Use PAYME_API_KEY to process payment via API
-            # For now, simulate success
+            # PAYME Integration
+            # API credentials from .env: PAYME_MERCHANT_ID, PAYME_SECRET_KEY
+            #
+            # To enable Payme payments:
+            # 1. Register at https://business.payme.uz
+            # 2. Get your credentials (merchant_id, secret_key)
+            # 3. Add them to .env file
+            # 4. For production: implement webhook at /api/payme/callback/
+            #
+            # Payme payment flow:
+            # - User clicks "Payme orqali to'lash"
+            # - Redirect to Payme checkout page with payment params
+            # - Payme processes payment and calls your webhook
+            # - Webhook confirms payment and updates payment status
+            #
+            # Example redirect URL generation:
+            # import base64
+            # amount_tiyin = int(float(settings.exam_price) * 100)
+            # params = f"m={PAYME_MERCHANT_ID};ac.order_id={payment.transaction_id};a={amount_tiyin}"
+            # encoded = base64.b64encode(params.encode()).decode()
+            # payme_url = f"https://checkout.paycom.uz/{encoded}"
             pass
             
         payment.status = 'completed'
         payment.completed_at = timezone.now()
         payment.save()
         
-        # Grant premium status to the user
         request.user.subscription = 'premium'
         request.user.save()
         
-        messages.success(request, f"✅ To'lovni muvaffaqiyatli amalga oshirdingiz! Endi barcha testlardan foydalanishingiz mumkin.")
+        messages.success(request, f"To'lovni muvaffaqiyatli amalga oshirdingiz! Testni boshlashingiz mumkin.")
         
-        # Store test_id in session to be picked up by start_exam
         if post_test_id and post_test_id.strip():
             request.session['pending_test_id'] = post_test_id
-            request.session['has_paid_for_attempt'] = True
-            return redirect('start_exam')
-        else:
-            # If no specific test_id, go to dashboard with success message
-            request.session['has_paid_for_attempt'] = True
-            return redirect('user_dashboard')
+        request.session['has_paid_for_attempt'] = True
+        return redirect('start_exam')
     
     return render(request, 'main/payment.html', {'settings': settings, 'test_id': test_id})
 
@@ -1226,3 +1360,252 @@ def error_404(request, exception):
 
 def error_500(request):
     return render(request, '500.html', status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def click_callback(request):
+    """
+    Click payment webhook callback handler.
+    
+    This endpoint receives payment confirmation from Click.
+    Configure this URL in your Click merchant dashboard.
+    
+    Required .env variables:
+    - CLICK_MERCHANT_ID
+    - CLICK_SERVICE_ID
+    - CLICK_SECRET_KEY
+    
+    Click sends two types of requests:
+    1. Prepare - validate transaction before payment
+    2. Complete - confirm successful payment
+    
+    Documentation: https://docs.click.uz/en/click-api/
+    """
+    import hashlib
+    
+    try:
+        data = json.loads(request.body)
+        
+        click_trans_id = data.get('click_trans_id')
+        service_id = data.get('service_id')
+        merchant_trans_id = data.get('merchant_trans_id')
+        amount = data.get('amount')
+        action = data.get('action')
+        sign_time = data.get('sign_time')
+        sign_string = data.get('sign_string')
+        error = data.get('error')
+        
+        expected_sign = hashlib.md5(
+            f"{click_trans_id}{service_id}{CLICK_SECRET_KEY}{merchant_trans_id}{amount}{action}{sign_time}".encode()
+        ).hexdigest()
+        
+        if sign_string != expected_sign:
+            return JsonResponse({
+                'error': -1,
+                'error_note': 'Invalid signature'
+            })
+        
+        try:
+            payment = Payment.objects.get(transaction_id=merchant_trans_id)
+        except Payment.DoesNotExist:
+            return JsonResponse({
+                'error': -5,
+                'error_note': 'Transaction not found'
+            })
+        
+        if action == '0':
+            return JsonResponse({
+                'error': 0,
+                'error_note': 'Success',
+                'click_trans_id': click_trans_id,
+                'merchant_trans_id': merchant_trans_id,
+                'merchant_prepare_id': payment.id
+            })
+        
+        elif action == '1':
+            if error == '0':
+                payment.status = 'completed'
+                payment.completed_at = timezone.now()
+                payment.save()
+                
+                payment.user.subscription = 'premium'
+                payment.user.save()
+            
+            return JsonResponse({
+                'error': 0,
+                'error_note': 'Success',
+                'click_trans_id': click_trans_id,
+                'merchant_trans_id': merchant_trans_id,
+                'merchant_confirm_id': payment.id
+            })
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': -9,
+            'error_note': str(e)
+        })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def payme_callback(request):
+    """
+    Payme payment webhook callback handler.
+    
+    This endpoint receives JSON-RPC requests from Payme.
+    Configure this URL in your Payme merchant dashboard.
+    
+    Required .env variables:
+    - PAYME_MERCHANT_ID
+    - PAYME_SECRET_KEY
+    
+    Payme JSON-RPC methods:
+    - CheckPerformTransaction - validate before payment
+    - CreateTransaction - create transaction record
+    - PerformTransaction - confirm payment
+    - CancelTransaction - handle cancellation
+    - CheckTransaction - check transaction status
+    
+    Documentation: https://developer.help.paycom.uz/
+    """
+    import base64
+    
+    try:
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Basic '):
+            try:
+                credentials = base64.b64decode(auth_header[6:]).decode()
+                provided_key = credentials.split(':')[1] if ':' in credentials else ''
+                if provided_key != PAYME_SECRET_KEY:
+                    return JsonResponse({
+                        'error': {
+                            'code': -32504,
+                            'message': 'Unauthorized'
+                        }
+                    })
+            except:
+                pass
+        
+        data = json.loads(request.body)
+        method = data.get('method')
+        params = data.get('params', {})
+        request_id = data.get('id')
+        
+        if method == 'CheckPerformTransaction':
+            account = params.get('account', {})
+            order_id = account.get('order_id')
+            amount = params.get('amount')
+            
+            try:
+                payment = Payment.objects.get(transaction_id=order_id)
+                expected_amount = int(float(payment.amount) * 100)
+                
+                if amount != expected_amount:
+                    return JsonResponse({
+                        'error': {
+                            'code': -31001,
+                            'message': 'Invalid amount'
+                        },
+                        'id': request_id
+                    })
+                
+                return JsonResponse({
+                    'result': {
+                        'allow': True
+                    },
+                    'id': request_id
+                })
+            except Payment.DoesNotExist:
+                return JsonResponse({
+                    'error': {
+                        'code': -31050,
+                        'message': 'Order not found'
+                    },
+                    'id': request_id
+                })
+        
+        elif method == 'CreateTransaction':
+            account = params.get('account', {})
+            order_id = account.get('order_id')
+            payme_id = params.get('id')
+            
+            try:
+                payment = Payment.objects.get(transaction_id=order_id)
+                return JsonResponse({
+                    'result': {
+                        'create_time': int(payment.created_at.timestamp() * 1000),
+                        'transaction': str(payment.id),
+                        'state': 1
+                    },
+                    'id': request_id
+                })
+            except Payment.DoesNotExist:
+                return JsonResponse({
+                    'error': {
+                        'code': -31050,
+                        'message': 'Order not found'
+                    },
+                    'id': request_id
+                })
+        
+        elif method == 'PerformTransaction':
+            payme_id = params.get('id')
+            
+            payments = Payment.objects.filter(status='processing')
+            for payment in payments:
+                payment.status = 'completed'
+                payment.completed_at = timezone.now()
+                payment.save()
+                
+                payment.user.subscription = 'premium'
+                payment.user.save()
+            
+            return JsonResponse({
+                'result': {
+                    'transaction': payme_id,
+                    'perform_time': int(timezone.now().timestamp() * 1000),
+                    'state': 2
+                },
+                'id': request_id
+            })
+        
+        elif method == 'CancelTransaction':
+            return JsonResponse({
+                'result': {
+                    'transaction': params.get('id'),
+                    'cancel_time': int(timezone.now().timestamp() * 1000),
+                    'state': -1
+                },
+                'id': request_id
+            })
+        
+        elif method == 'CheckTransaction':
+            return JsonResponse({
+                'result': {
+                    'create_time': int(timezone.now().timestamp() * 1000),
+                    'perform_time': int(timezone.now().timestamp() * 1000),
+                    'cancel_time': 0,
+                    'transaction': params.get('id'),
+                    'state': 2,
+                    'reason': None
+                },
+                'id': request_id
+            })
+        
+        return JsonResponse({
+            'error': {
+                'code': -32601,
+                'message': 'Method not found'
+            },
+            'id': request_id
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': {
+                'code': -32400,
+                'message': str(e)
+            }
+        })
+
