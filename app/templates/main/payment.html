@@ -349,18 +349,82 @@
                 order: -1;
             }
         }
-        .coming-soon {
-            background: #fef3c7;
-            color: #92400e;
-            padding: 0.25rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
+        .success-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            text-align: center;
+            padding: 2rem;
+        }
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: #d1fae5;
+            color: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            animation: scaleIn 0.5s ease;
+        }
+        @keyframes scaleIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+        .success-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+        .success-message {
+            color: var(--gray);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            max-width: 500px;
+        }
+        .countdown {
+            font-size: 1.5rem;
             font-weight: 700;
-            margin-left: auto;
+            color: var(--primary);
         }
     </style>
 </head>
 <body>
+    {% if payment_success %}
+    <div class="success-overlay">
+        <div class="success-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        <h2 class="success-title">To'lov muvaffaqiyatli!</h2>
+        <p class="success-message">To'lovni muvaffaqiyatli amalga oshirdingiz! Testni boshlashingiz mumkin.</p>
+        <div class="countdown">
+            Siz <span id="redirectTimer">5</span> soniyadan keyin testga yo'naltirilasiz...
+        </div>
+    </div>
+    <script>
+        let timeLeftRedirect = 5;
+        const timerText = document.getElementById('redirectTimer');
+        const interval = setInterval(() => {
+            timeLeftRedirect--;
+            timerText.textContent = timeLeftRedirect;
+            if (timeLeftRedirect <= 0) {
+                clearInterval(interval);
+                window.location.href = "{% url 'start_exam' %}{% if test_id %}?test_id={{ test_id }}{% endif %}";
+            }
+        }, 1000);
+    </script>
+    {% else %}
     <div class="toast-notification" id="toast">
         <div class="toast-icon">
             <i class="fas fa-clock"></i>
@@ -380,21 +444,9 @@
                 <h1>To'lov usulini tanlang</h1>
                 <div class="timer-display">
                     <i class="fas fa-clock"></i>
-                    <span id="timer">39:58</span>
+                    <span id="timer">05:00</span>
                 </div>
             </div>
-
-            {% comment %}
-            {% if messages %}
-            <div style="margin-bottom: 20px;">
-                {% for message in messages %}
-                <div style="padding: 1rem; border-radius: 12px; margin-bottom: 0.5rem; background: {% if message.tags == 'error' %}#fee2e2; color: #991b1b;{% else %}#d1fae5; color: #065f46;{% endif %};">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% endcomment %}
 
             <form id="paymentForm" method="POST">
                 {% csrf_token %}
@@ -544,10 +596,8 @@
             }
         }
         
-        // Load prices when page loads
         loadLatestPrices();
       
-        // Timer countdown (5 minutes)
         let timeLeft = 5 * 60;
         const timerElement = document.getElementById('timer');
         const toast = document.getElementById('toast');
@@ -569,14 +619,12 @@
         
         setInterval(updateTimer, 1000);
 
-        // Card number formatting
         document.getElementById('cardNumber').addEventListener('input', function(e) {
             let value = e.target.value.replace(/\s/g, '');
             let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
             e.target.value = formattedValue;
         });
 
-        // Expiry date formatting
         document.getElementById('cardExpiry').addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length >= 2) {
@@ -585,7 +633,6 @@
             e.target.value = value;
         });
 
-        // Payment method toggle
         document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 document.querySelectorAll('.payment-method').forEach(method => {
@@ -593,53 +640,26 @@
                 });
                 this.closest('.payment-method').classList.add('active');
                 
-                const cardForm = document.getElementById('cardForm');
-                const clickForm = document.getElementById('clickForm');
-                const paymeForm = document.getElementById('paymeForm');
+                const forms = ['cardForm', 'clickForm', 'paymeForm'];
+                forms.forEach(f => document.getElementById(f).classList.remove('active'));
                 
-                cardForm.classList.remove('active');
-                clickForm.classList.remove('active');
-                paymeForm.classList.remove('active');
-                
-                if (this.value === 'uzcard') {
-                    cardForm.classList.add('active');
-                } else if (this.value === 'click') {
-                    clickForm.classList.add('active');
-                } else if (this.value === 'payme') {
-                    paymeForm.classList.add('active');
-                }
+                if (this.value === 'uzcard') document.getElementById('cardForm').classList.add('active');
+                else if (this.value === 'click') document.getElementById('clickForm').classList.add('active');
+                else if (this.value === 'payme') document.getElementById('paymeForm').classList.add('active');
             });
         });
 
-        // Form submission
         document.getElementById('paymentForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
             const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-            
             if (paymentMethod === 'uzcard') {
                 const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
-                const cardExpiry = document.getElementById('cardExpiry').value;
-                const cardHolder = document.getElementById('cardHolder').value;
-                
                 if (cardNumber.length !== 16) {
+                    e.preventDefault();
                     alert('Karta raqami 16 raqamdan iborat bo\'lishi kerak');
-                    return;
-                }
-                
-                if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
-                    alert('Amal qilish muddati MM/YY formatida bo\'lishi kerak');
-                    return;
-                }
-                
-                if (cardHolder.length < 3) {
-                    alert('Karta egasining ismini to\'liq kiriting');
-                    return;
                 }
             }
-            
-            this.submit();
         });
     </script>
+    {% endif %}
 </body>
 </html>
