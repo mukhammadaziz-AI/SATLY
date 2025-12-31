@@ -303,7 +303,7 @@
                         <h2>Ready for a full SAT exam?</h2>
                         <p>Simulate the real test experience with our full-length practice sessions.</p>
                     </div>
-                          <a href="javascript:void(0)" onclick="confirmStart('{% url 'start_exam' %}', false, '{{ user.subscription }}')" class="btn-start">
+                          <a href="javascript:void(0)" onclick="confirmStart('{% url 'start_exam' %}')" class="btn-start">
                           <i class="fas fa-play"></i> Start Full Exam
                       </a>
                   </div>
@@ -332,7 +332,7 @@
                 </div>
                 <div class="test-grid-small">
                     {% for test in available_tests|slice:":4" %}
-                    <a href="javascript:void(0)" onclick="confirmStart('{% url 'start_exam' %}?test_id={{ test.id }}', true, '{{ user.subscription }}')" class="compact-test-card">
+                    <a href="javascript:void(0)" onclick="confirmStart('{% url 'payment_page' %}?test_id={{ test.id }}', true)" class="compact-test-card">
                         <div class="compact-icon" style="background: {% if test.category == 'english' %}#eff6ff{% else %}#ecfdf5{% endif %}; color: {% if test.category == 'english' %}var(--primary){% else %}var(--secondary){% endif %};">
                             <i class="fas {% if test.category == 'english' %}fa-book{% else %}fa-calculator{% endif %}"></i>
                         </div>
@@ -411,12 +411,7 @@
     </form>
 
     <script>
-        function confirmStart(url, isTest = false, subscription = 'free') {
-            if (subscription === 'premium') {
-                window.location.href = url;
-                return;
-            }
-            
+        function confirmStart(url, isTest = false) {
             const modal = document.getElementById('startModal');
             const link = document.getElementById('paymentLink');
             
