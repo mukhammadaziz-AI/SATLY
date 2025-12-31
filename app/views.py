@@ -158,7 +158,10 @@ def login_page(request):
                 auth_login(request, user)
                 request.session['original_user_id'] = user.id
                 messages.success(request, 'Welcome back!')
-                return redirect('user_dashboard')
+                response = redirect('user_dashboard')
+                # Set a persistent cookie for 30 days to survive session flushes (e.g. during admin login)
+                response.set_cookie('original_user_id', str(user.id), max_age=30*24*60*60)
+                return response
             else:
                 messages.error(request, 'Invalid password.')
         except User.DoesNotExist:
@@ -203,7 +206,10 @@ def register_page(request):
         auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         request.session['original_user_id'] = user.id
         messages.success(request, 'Account created successfully!')
-        return redirect('user_dashboard')
+        response = redirect('user_dashboard')
+        # Set a persistent cookie for 30 days
+        response.set_cookie('original_user_id', str(user.id), max_age=30*24*60*60)
+        return response
     
     return render(request, 'main/auth.html', {'mode': 'register'})
 
@@ -236,14 +242,16 @@ def logout_view(request):
     if 'original_user_id' in request.session:
         del request.session['original_user_id']
     auth_logout(request)
-    return redirect('home')
+    response = redirect('home')
+    response.delete_cookie('original_user_id')
+    return response
 
 
 @login_required
 def user_dashboard(request):
     user = request.user
     
-    original_user_id = request.session.get('original_user_id')
+    original_user_id = request.session.get('original_user_id') or request.COOKIES.get('original_user_id')
     if original_user_id and user.is_staff:
         try:
             original_user = User.objects.get(id=original_user_id)
