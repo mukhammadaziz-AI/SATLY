@@ -1,4 +1,4 @@
-# Block AI Crawlers and Web Scrapers
+# Block AI Crawlers and Web Scraperss
 User-agent: GPTBot
 Disallow: /
  
@@ -58,4 +58,5 @@ Disallow: /payment/
 Allow: /
 Allow: /login/
 Allow: /signup/
+
 
