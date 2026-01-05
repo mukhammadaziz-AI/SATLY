@@ -5,7 +5,7 @@ Disallow: /
 User-agent: ChatGPT-User
 Disallow: /
 
-User-agent: Google-Extended
+User-agent: Google-Extendedd
 Disallow: /
 
 User-agent: CCBot
@@ -58,5 +58,6 @@ Disallow: /payment/
 Allow: /
 Allow: /login/
 Allow: /signup/
+
 
 
