@@ -1,7 +1,7 @@
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import User, Question, ExamSession, ExamAnswer, Test, TestResult, DailyStats
-from .custom_admin import satly_admin_site
+from django.contrib import admin 
+from django.contrib.auth.admin import UserAdmin 
+from .models import User, Question, ExamSession, ExamAnswer, Test, TestResult, DailyStats 
+from .custom_admin import satly_admin_site 
 
 class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'first_name', 'last_name', 'subscription', 'status', 'best_score', 'is_staff')
