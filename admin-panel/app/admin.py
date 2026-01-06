@@ -35,16 +35,16 @@ class TestAdmin(admin.ModelAdmin):
     list_display = ('title', 'category', 'test_type', 'difficulty', 'duration', 'is_active')
     list_filter = ('category', 'test_type', 'difficulty', 'is_active')
     search_fields = ('title', 'description')
- 
+
 class TestResultAdmin(admin.ModelAdmin):
     list_display = ('user', 'test', 'score', 'band_score', 'completed_at')
     list_filter = ('test__category',)
     search_fields = ('user__username', 'user__email')
- 
+
 class DailyStatsAdmin(admin.ModelAdmin):
     list_display = ('date', 'active_users', 'new_signups', 'tests_completed')
     ordering = ('-date',)
- 
+
 satly_admin_site.register(User, CustomUserAdmin)
 satly_admin_site.register(Question, QuestionAdmin)
 satly_admin_site.register(ExamSession, ExamSessionAdmin)
