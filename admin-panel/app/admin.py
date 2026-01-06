@@ -14,7 +14,7 @@ class CustomUserAdmin(UserAdmin):
             'fields': ('phone', 'telegram_username', 'english_level', 'avatar', 'subscription', 'status', 'best_score', 'target_score', 'tests_completed', 'total_time_spent')
         }),
     )
-
+ 
 class QuestionAdmin(admin.ModelAdmin):
     list_display = ('id', 'category', 'module', 'question_number', 'correct_answer', 'created_at')
     list_filter = ('category', 'module')
