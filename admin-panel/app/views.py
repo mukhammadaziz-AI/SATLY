@@ -14,7 +14,7 @@ import json
 import random
 
 from .models import User, Test, TestResult, DailyStats, Question, ExamSession, ExamAnswer, Payment, PricingSettings
-
+# space
 
 def home_page(request):
     if request.user.is_authenticated:
@@ -969,4 +969,5 @@ def api_pricing_settings(request):
         settings.exam_price = data.get('exam_price')
         settings.subscription_price = data.get('subscription_price')
         settings.save()
+
         return JsonResponse({'success': True})
