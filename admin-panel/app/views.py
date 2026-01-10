@@ -20,8 +20,8 @@ def home_page(request):
     if request.user.is_authenticated:
         return redirect('user_dashboard')
     return render(request, 'main/index.html')
-
-
+# space
+# space
 def login_page(request):
     if request.user.is_authenticated:
         return redirect('user_dashboard')
@@ -971,5 +971,6 @@ def api_pricing_settings(request):
         settings.save()
 
         return JsonResponse({'success': True})
+
 
 
