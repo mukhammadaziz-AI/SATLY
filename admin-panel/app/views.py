@@ -12,7 +12,7 @@ from django.utils import timezone
 from datetime import timedelta
 import json
 import random
-
+# space
 from .models import User, Test, TestResult, DailyStats, Question, ExamSession, ExamAnswer, Payment, PricingSettings
 # space
 # space
@@ -971,4 +971,5 @@ def api_pricing_settings(request):
         settings.save()
 
         return JsonResponse({'success': True})
+
 
